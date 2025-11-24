@@ -1,52 +1,58 @@
-import { IonContent, IonHeader, IonList, IonPage, IonTitle, IonToolbar, IonItem, IonInput, IonButton } from '@ionic/react';
-import React, {useState} from "react";
-
-import './Home.css';
+import {
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButton,
+  IonText,
+  IonGrid,
+  IonRow,
+  IonCol
+} from "@ionic/react";
+import { useHistory } from "react-router";
 
 const Home: React.FC = () => {
-  const [message, setMessage] = useState("");
-  const [chat, setChat] = useState<{user: String; ai: string}[]>([]);
+  const history = useHistory();
 
-  const sendMessage = async() =>{
-    if(!message.trim()) return;
-
-  const userMessage = message;
-  setMessage("");
-
-  const response = await fetch("http://127.0.0.1:8000/chat", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ message: userMessage }),
-  })
-
-  const data = await response.json();
-
-  setChat([...chat, {user: userMessage, ai: data.reply}]);
-}
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Chat Room</IonTitle>
-        </IonToolbar> 
+          <IonTitle>Welcome</IonTitle>
+        </IonToolbar>
       </IonHeader>
+
       <IonContent className="ion-padding">
-            <IonList>
-              {chat.map((entry, idx) => (
-            <IonItem key={idx}>
-              <div>
-                <p><b>You:</b> {entry.user}</p>
-                <p><b>AI:</b> {entry.ai}</p>
-              </div>
-            </IonItem>
-          ))}
-            </IonList>
-            <IonInput
-          placeholder="Type your message..."
-          value={message}
-          onIonChange={(e) => setMessage(e.detail.value!)}
-        />
-        <IonButton expand="block" onClick={sendMessage}>Send</IonButton>
+        <IonGrid>
+          <IonRow className="ion-text-center">
+            <IonCol size="12">
+              <IonText>
+                <h2>Welcome to the App!</h2>
+              </IonText>
+            </IonCol>
+          </IonRow>
+
+          <IonRow>
+            <IonCol>
+              <IonButton expand="block" onClick={() => history.push("/login")}>
+                Login
+              </IonButton>
+
+              <IonButton expand="block" onClick={() => history.push("/chatbot")}>
+                Chat Bot
+              </IonButton>
+
+              <IonButton
+                expand="block"
+                color="secondary"
+                onClick={() => history.push("/signup")}
+              >
+                Sign Up
+              </IonButton>
+            </IonCol>
+          </IonRow>
+        </IonGrid>
       </IonContent>
     </IonPage>
   );
