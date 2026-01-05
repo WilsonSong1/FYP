@@ -34,7 +34,6 @@ const Login: React.FC = () => {
       return;
     }
 
-    // Save token
     localStorage.setItem("token", data.access_token);
 
     history.push("/home");
@@ -72,11 +71,11 @@ const Login: React.FC = () => {
           Login
         </IonButton>
 
-        <IonButton
-          expand="block"
-          fill="clear"
-          onClick={() => history.push("/signup")}
-        >
+        <IonButton expand="block" fill="clear" onClick={() => history.push("/forgotpass")}>
+          Forgot password?
+        </IonButton>
+
+        <IonButton expand="block" fill="clear" onClick={() => history.push("/signup")}>
           Don't have an account? Sign Up
         </IonButton>
       </IonContent>

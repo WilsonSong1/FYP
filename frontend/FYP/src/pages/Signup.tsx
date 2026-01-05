@@ -78,11 +78,7 @@ const Signup: React.FC = () => {
           Create Account
         </IonButton>
 
-        <IonButton
-          expand="block"
-          fill="clear"
-          onClick={() => history.push("/login")}
-        >
+        <IonButton expand="block" fill="clear" onClick={() => history.push("/login")} >
           Already have an account? Login
         </IonButton>
       </IonContent>

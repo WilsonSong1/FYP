@@ -4,20 +4,23 @@ import {
     IonList, 
     IonPage, 
     IonTitle, 
-    IonToolbar, 
+    IonToolbar,
+    IonFooter,
     IonItem, 
-    IonInput, 
+    IonInput,
+    IonText,
     IonButton 
 } from '@ionic/react';
-import React, {useState} from "react";
+import React, {useState, useRef, useEffect} from "react";
 import { useHistory } from "react-router";
 
-import './Home.css';
+import './ChatBot.css';
 
 const Home: React.FC = () => {
   const history = useHistory();
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<{user: String; ai: string}[]>([]);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   const sendMessage = async() =>{
     if(!message.trim()) return;
@@ -25,7 +28,11 @@ const Home: React.FC = () => {
   const userMessage = message;
   setMessage("");
 
-  const response = await fetch("http://127.0.0.1:8000/chat", {
+  //Place "..." while AI is generating response
+  setChat((prev) => [...prev, {user: userMessage, ai: "..."}]);
+
+  try{
+      const response = await fetch("http://127.0.0.1:8000/chat", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ message: userMessage }),
@@ -33,35 +40,80 @@ const Home: React.FC = () => {
 
   const data = await response.json();
 
-  setChat([...chat, {user: userMessage, ai: data.reply}]);
-}
+  //Replace "..." with AI generated reply
+ setChat((prev) =>
+  prev.map((entry, idx) =>
+    idx === prev.length - 1
+      ?{...entry, ai: data.reply || "Error: no response"}
+      : entry)
+    );
+    } catch (err) {
+      console.error(err);
+      setChat((prev) =>
+        prev.map((entry, idx) =>
+          idx === prev.length - 1
+            ? {...entry, ai: "Could not reach server."}
+            : entry
+        )
+      );
+    }
+  };
 
+  //Auto scroll
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth"});
+  }), [(chat)];
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonButton fill="clear" size="large" onClick={() => history.push("/home")} >Chat Room</IonButton>
-        </IonToolbar> 
+          <IonButton
+            fill="clear"
+            size="large"
+            onClick={() => history.push("/home")}
+          >
+            Chat Room
+          </IonButton>
+        </IonToolbar>
       </IonHeader>
+
       <IonContent className="ion-padding">
-            <IonList>
-              {chat.map((entry, idx) => (
-            <IonItem key={idx}>
-              <div>
-                <p><b>You:</b> {entry.user}</p>
-                <p><b>AI:</b> {entry.ai}</p>
+        <div className="chat-container">
+          {chat.map((entry, idx) => (
+            <React.Fragment key={idx}>
+              <div className="message-row user-row">
+                <div className="message-bubble user-bubble">
+                  <IonText className="message-author">You</IonText>
+                  <p className="message-text">{entry.user}</p>
+                </div>
               </div>
-            </IonItem>
+
+              <div className="message-row ai-row">
+                <div className="message-bubble ai-bubble">
+                  <IonText className="message-author">AI Tutor</IonText>
+                  <p className="message-text">{entry.ai}</p>
+                </div>
+              </div>
+            </React.Fragment>
           ))}
-            </IonList>
-            <IonInput
-          placeholder="Type your message..."
-          value={message}
-          onIonChange={(e) => setMessage(e.detail.value!)}
-        />
-        <IonButton expand="block" onClick={sendMessage}>Send</IonButton>
+          <div ref={chatEndRef} />
+        </div>
       </IonContent>
+
+      <IonFooter>
+        <IonItem className="input-bar" lines="none">
+          <IonInput
+            placeholder="Type your message..."
+            value={message}
+            onIonChange={(e) => setMessage(e.detail.value || "")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") sendMessage();
+            }}
+          />
+          <IonButton onClick={sendMessage}>Send</IonButton>
+        </IonItem>
+      </IonFooter>
     </IonPage>
   );
 };

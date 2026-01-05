@@ -1,11 +1,14 @@
-from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi import FastAPI, Request, Depends, HTTPException, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from openai import OpenAI
+from datetime import datetime, timedelta
 from database import SessionLocal, engine
-from schemas import UserCreate, UserLogin
+from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest
 from auth import hash_password, verify_password, create_access_token
+from emailUtil import  send_reset_code_email
+import random
 import os
 import models
 
@@ -47,7 +50,7 @@ async def chat(request: Request):
     userMessage = data.get("message", "")
     response = client.chat.completions.create(
     extra_body={"skip_special_tokens": True},
-    model="deepseek/deepseek-r1-0528-qwen3-8b:free",
+    model="nousresearch/hermes-3-llama-3.1-405b:free",
   messages=[
               {"role": "system", "content": "You are a tutor for a university student in software development"},
               {"role": "user", "content": userMessage}
@@ -101,3 +104,41 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     token = create_access_token({"sub": db_user.username})
 
     return {"access_token": token, "token_type": "bearer"}
+
+@app.post("/forgot-password/request")
+def request_password_reset(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+
+    if user:
+        code = f"{random.randint(0, 999999):06d}"
+        user.reset_code = code
+        user.reset_code_expires = datetime.utcnow() + timedelta(minutes=10)
+        db.commit()
+
+        try:
+            send_reset_code_email(user.email, code)
+        except Exception as e:
+            print("Error sending email:", e)
+            raise HTTPException(status_code=500, detail="Could not send email")
+
+    return {"message": "If that email exists, a reset code has been sent."}
+
+@app.post("/forgot-password/reset")
+def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+
+    if not user or not user.reset_code or not user.reset_code_expires:
+        raise HTTPException(status_code=400, detail="Invalid reset request")
+
+    if user.reset_code != payload.code:
+        raise HTTPException(status_code=400, detail="Invalid code")
+
+    if user.reset_code_expires < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Code has expired")
+
+    user.password_hash = hash_password(payload.new_password)
+    user.reset_code = None
+    user.reset_code_expires = None
+    db.commit()
+
+    return {"message": "Password updated successfully"}

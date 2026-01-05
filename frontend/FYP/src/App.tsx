@@ -5,6 +5,8 @@ import Home from './pages/Home';
 import Login from "./pages/Login";
 import Signup from "./pages/Signup"
 import ChatBot from "./pages/ChatBot"
+import ForgotPass from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword'
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -49,8 +51,17 @@ const App: React.FC = () => (
         <Route exact path="/chatbot">
           <ChatBot />
         </Route>
+
         <Route exact path="/login">
           <Login />
+        </Route>
+
+        <Route exact path="/forgotpass">
+          <ForgotPass />
+        </Route>
+
+        <Route exact path="/resetpass">
+          <ResetPassword />
         </Route>
 
         <Route exact path="/signup">
