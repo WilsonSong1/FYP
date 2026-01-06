@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 
 class UserCreate(BaseModel):
     username: str
@@ -32,8 +32,8 @@ class QuizRequest(BaseModel):
 
 class QuizQuestion(BaseModel):
     question: str
-    options: List[str]
-    correct_answer: int
+    options: Dict[str, str]
+    correct_answer: str
 
 class QuizResponse(BaseModel):
     questions: List[QuizQuestion]

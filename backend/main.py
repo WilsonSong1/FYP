@@ -12,6 +12,7 @@ import random
 import os
 import models
 import json
+import re
 
 load_dotenv()
 
@@ -52,7 +53,7 @@ async def chat(request: Request):
     response = client.chat.completions.create(
     extra_body={"skip_special_tokens": True},
     model="nousresearch/hermes-3-llama-3.1-405b:free",
-  messages=[
+    messages=[
               {"role": "system", "content": "You are a tutor for a university student in software development"},
               {"role": "user", "content": userMessage}
             ]
@@ -146,33 +147,65 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
 
 @app.post("/generate-quiz", response_model=QuizResponse)
 async def generate_quiz(data: QuizRequest):
+    topic = data.topic
+    level = data.level
+
     prompt = f"""
 You are an education quiz generator
-Create 10 multiple-choice questions on the topic: "{data.topic}"
-Target education level: "{data.level}
+Generate 10 multiple choice questions on the topic "{topic}"
+for a student at "{level}" level.
 
 Rules:
 -Each question must have exactly 4 answer options
 -Only ONE answer is correct
--Return JSON ONLY in this exact format:
-{{
-    "questions"[
-     {{
-        "questions": "Question text",
-        "options": ["A", "B", "C", "D"],
-        "correct_answer": 0
-     }}
-    ]
-
-}}
+-Return JSON ONLY in this exact example format:
+[
+  {{
+    "question": "...",
+    "options": {{
+      "A": "...",
+      "B": "...",
+      "C": "...",
+      "D": "..."
+    }},
+    "correct_answer": "A"
+  }}
+]
 Do not include explanations or extra text.
 """
     
-    response = client.chat.completions.create(
+    response = client.responses.create(
         model="nousresearch/hermes-3-llama-3.1-405b:free",
-        messages=[{"role": "user", "conten": prompt}]
+        input=[
+            {
+                "role": "system",
+                "content": "You are an educational quiz generator."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
     )
 
-    quiz_json = response.choices[0].messages.content
 
-    return json.loads(quiz_json)
+    quiz_text = response.output_text
+
+    cleaned = quiz_text.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", cleaned)
+        cleaned = re.sub(r"\s*```$", "", cleaned).strip()
+
+    match = re.search(r"\[[\s\S]*\]", cleaned)
+    if match:
+        cleaned = match.group(0).strip()
+
+    try:
+        questions = json.loads(cleaned)
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=502,
+            detail="Quiz generator returned invalid JSON. Try again.",
+        )
+
+    return {"questions": questions}
