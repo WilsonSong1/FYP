@@ -5,12 +5,13 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from datetime import datetime, timedelta
 from database import SessionLocal, engine
-from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest
+from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest, QuizRequest, QuizResponse
 from auth import hash_password, verify_password, create_access_token
 from emailUtil import  send_reset_code_email
 import random
 import os
 import models
+import json
 
 load_dotenv()
 
@@ -142,3 +143,36 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     db.commit()
 
     return {"message": "Password updated successfully"}
+
+@app.post("/generate-quiz", response_model=QuizResponse)
+async def generate_quiz(data: QuizRequest):
+    prompt = f"""
+You are an education quiz generator
+Create 10 multiple-choice questions on the topic: "{data.topic}"
+Target education level: "{data.level}
+
+Rules:
+-Each question must have exactly 4 answer options
+-Only ONE answer is correct
+-Return JSON ONLY in this exact format:
+{{
+    "questions"[
+     {{
+        "questions": "Question text",
+        "options": ["A", "B", "C", "D"],
+        "correct_answer": 0
+     }}
+    ]
+
+}}
+Do not include explanations or extra text.
+"""
+    
+    response = client.chat.completions.create(
+        model="nousresearch/hermes-3-llama-3.1-405b:free",
+        messages=[{"role": "user", "conten": prompt}]
+    )
+
+    quiz_json = response.choices[0].messages.content
+
+    return json.loads(quiz_json)

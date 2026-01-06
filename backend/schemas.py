@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List
 
 class UserCreate(BaseModel):
     username: str
@@ -24,3 +25,15 @@ class ResetPasswordRequest(BaseModel):
     email: str
     code: str
     new_password: str
+
+class QuizRequest(BaseModel):
+    topic: str
+    level: str
+
+class QuizQuestion(BaseModel):
+    question: str
+    options: List[str]
+    correct_answer: int
+
+class QuizResponse(BaseModel):
+    questions: List[QuizQuestion]
