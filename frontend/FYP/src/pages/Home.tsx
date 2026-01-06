@@ -43,6 +43,10 @@ const Home: React.FC = () => {
                 Chat Bot
               </IonButton>
 
+              <IonButton expand="block" onClick={() => history.push("/quiz")}>
+                MCQ Quiz
+              </IonButton>
+
               <IonButton
                 expand="block"
                 color="secondary"
