@@ -43,7 +43,7 @@ const Login: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonButton fill="clear" size="large" onClick={() => history.push("/home")} >Chat Room</IonButton>
+          <IonButton fill="clear" size="large" onClick={() => history.push("/home")} >Home</IonButton>
         </IonToolbar>
       </IonHeader>
 

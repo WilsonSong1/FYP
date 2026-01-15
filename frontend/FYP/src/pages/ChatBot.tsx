@@ -69,12 +69,7 @@ const Home: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonButton
-            fill="clear"
-            size="large"
-            onClick={() => history.push("/home")}
-          >
-            Chat Room
-          </IonButton>
+            fill="clear" size="large" onClick={() => history.push("/home")}> Home </IonButton>
         </IonToolbar>
       </IonHeader>
 
