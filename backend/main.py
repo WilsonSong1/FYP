@@ -52,7 +52,7 @@ async def chat(request: Request):
     userMessage = data.get("message", "")
     response = client.chat.completions.create(
     extra_body={"skip_special_tokens": True},
-    model="nousresearch/hermes-3-llama-3.1-405b:free",
+    model="deepseek/deepseek-r1-0528:free",
     messages=[
               {"role": "system", "content": "You are a tutor for a university student in software development"},
               {"role": "user", "content": userMessage}
@@ -175,7 +175,7 @@ Do not include explanations or extra text.
 """
     
     response = client.responses.create(
-        model="nousresearch/hermes-3-llama-3.1-405b:free",
+        model="deepseek/deepseek-r1-0528:free",
         input=[
             {
                 "role": "system",
