@@ -13,6 +13,7 @@ import {
 
 import { useHistory } from "react-router";
 import { useState } from "react";
+import "./PageTheme.css";
 
 const Login: React.FC = () => {
   const history = useHistory();
@@ -40,17 +41,18 @@ const Login: React.FC = () => {
   };
 
   return (
-    <IonPage>
+    <IonPage className="light-page">
       <IonHeader>
-        <IonToolbar>
-          <IonButton fill="clear" size="large" onClick={() => history.push("/home")} >Home</IonButton>
+        <IonToolbar className="light-toolbar">
+          <IonButton slot="start" className="light-link-button" fill="clear" size="large" onClick={() => history.push("/home")} >Home</IonButton>
+          <IonTitle className="ion-text-center">Login</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding">
+      <IonContent className="ion-padding light-content">
         {error && <IonText color="danger">{error}</IonText>}
 
-        <IonItem>
+        <IonItem className="light-item">
           <IonLabel position="stacked">Username</IonLabel>
           <IonInput
             value={username}
@@ -58,7 +60,7 @@ const Login: React.FC = () => {
           />
         </IonItem>
 
-        <IonItem>
+        <IonItem className="light-item">
           <IonLabel position="stacked">Password</IonLabel>
           <IonInput
             type="password"
@@ -67,15 +69,15 @@ const Login: React.FC = () => {
           />
         </IonItem>
 
-        <IonButton expand="block" className="ion-margin-top" onClick={loginUser}>
+        <IonButton expand="block" className="ion-margin-top light-primary-button" onClick={loginUser}>
           Login
         </IonButton>
 
-        <IonButton expand="block" fill="clear" onClick={() => history.push("/forgotpass")}>
+        <IonButton className="light-link-button" expand="block" fill="clear" onClick={() => history.push("/forgotpass")}>
           Forgot password?
         </IonButton>
 
-        <IonButton expand="block" fill="clear" onClick={() => history.push("/signup")}>
+        <IonButton className="light-link-button" expand="block" fill="clear" onClick={() => history.push("/signup")}>
           Don't have an account? Sign Up
         </IonButton>
       </IonContent>

@@ -1,14 +1,26 @@
 .home-page {
 	--ion-background-color: #f7fbff;
+	--ion-text-color: #000000;
+	color: #000000;
 }
 
 .home-toolbar {
 	--background: #eaf4ff;
-	--color: #2d4f73;
+	--color: #000000;
+}
+
+.home-toolbar ion-title.ion-text-center {
+	position: absolute;
+	left: 0;
+	right: 0;
+	text-align: center;
+	pointer-events: none;
 }
 
 .home-content {
 	--background: linear-gradient(180deg, #f7fbff 0%, #eef7ff 100%);
+	--color: #000000;
+	color: #000000;
 }
 
 .home-grid {
@@ -17,7 +29,7 @@
 }
 
 .home-grid h2 {
-	color: #355c84;
+	color: #000000;
 	margin-top: 1.25rem;
 	margin-bottom: 1.25rem;
 }
@@ -36,6 +48,7 @@
 .home-button {
 	width: min(100%, 360px);
 	min-height: 46px;
+	--color: #000000;
 	--border-radius: 10px;
 	--padding-top: 10px;
 	--padding-bottom: 10px;

@@ -1,10 +1,11 @@
 import React from "react";
 import { useState } from "react";
+import { useHistory } from "react-router";
 import {
   IonPage,
   IonHeader,
   IonToolbar,
-  IonTitle,
+    IonTitle,
   IonContent,
   IonInput,
   IonButton,
@@ -17,6 +18,7 @@ import {
   IonLabel,
   IonSpinner
 } from "@ionic/react";
+import "./PageTheme.css";
 
 interface Question {
   question: string;
@@ -25,6 +27,7 @@ interface Question {
 }
 
 const Quiz: React.FC = () => {
+    const history = useHistory();
     const [topic, setTopic] = useState("");
     const [level, setLevel] = useState("");
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -87,21 +90,26 @@ const Quiz: React.FC = () => {
     };
 
     return (
-        <IonPage>
+        <IonPage className="light-page">
             <IonHeader>
-                <IonToolbar>
-                    <IonTitle>Quiz Generator</IonTitle>
+                <IonToolbar className="light-toolbar">
+                    <IonButton slot="start" className="light-link-button" fill="clear" size="large" onClick={() => history.push("/home")}>
+                        Home
+                    </IonButton>
+                    <IonTitle className="ion-text-center">Quiz Generator</IonTitle>
                 </IonToolbar>
             </IonHeader>
-            <IonContent className="ion-padding">
+            <IonContent className="ion-padding light-content">
                 {!submitted && (
                     <>
                         <IonInput
+                            className="light-item"
                             placeholder="Enter Quiz Topic"
                             value={topic}
                             onIonChange={(e) => setTopic(e.detail.value!)}
                         />
                         <IonSelect
+                            className="light-item"
                             placeholder="Select education level"
                             value={level}
                             onIonChange={(e) => setLevel(e.detail.value!)}
@@ -111,7 +119,7 @@ const Quiz: React.FC = () => {
                             <IonSelectOption value="University">University</IonSelectOption>
                         </IonSelect>
 
-                        <IonButton expand="block" onClick={generateQuiz} disabled={loading}>
+                        <IonButton className="light-primary-button" expand="block" onClick={generateQuiz} disabled={loading}>
                             {loading ? "Generating..." : "Generate Quiz"}
                         </IonButton>
 
@@ -148,7 +156,7 @@ const Quiz: React.FC = () => {
                                         </IonItem>
                                     ))}
                                 </IonList>
-                                <IonButton expand="block" onClick={submitQuiz} color="success">
+                                <IonButton className="light-primary-button" expand="block" onClick={submitQuiz}>
                                     Submit Quiz
                                 </IonButton>
                             </>
@@ -186,7 +194,7 @@ const Quiz: React.FC = () => {
                             ))}
                         </IonList>
 
-                        <IonButton expand="block" onClick={resetQuiz} color="primary">
+                        <IonButton className="light-primary-button" expand="block" onClick={resetQuiz}>
                             Take Another Quiz
                         </IonButton>
                     </>

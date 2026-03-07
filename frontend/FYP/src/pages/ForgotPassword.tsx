@@ -12,6 +12,7 @@ import {
 } from "@ionic/react";
 import { useState } from "react";
 import { useHistory } from "react-router";
+import "./PageTheme.css";
 
 const ForgotPassword: React.FC = () => {
   const history = useHistory();
@@ -42,18 +43,18 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <IonPage>
+    <IonPage className="light-page">
       <IonHeader>
-        <IonToolbar>
+        <IonToolbar className="light-toolbar">
           <IonTitle>Forgot Password</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding">
+      <IonContent className="ion-padding light-content">
         {error && <IonText color="danger"><p>{error}</p></IonText>}
         {info && <IonText color="success"><p>{info}</p></IonText>}
 
-        <IonItem>
+        <IonItem className="light-item">
           <IonLabel position="stacked">Email</IonLabel>
           <IonInput
             value={email}
@@ -61,7 +62,7 @@ const ForgotPassword: React.FC = () => {
           />
         </IonItem>
 
-        <IonButton expand="block" className="ion-margin-top" onClick={handleSubmit}>
+        <IonButton expand="block" className="ion-margin-top light-primary-button" onClick={handleSubmit}>
           Send reset code
         </IonButton>
       </IonContent>

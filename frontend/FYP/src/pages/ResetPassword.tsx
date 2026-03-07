@@ -12,6 +12,7 @@ import {
 } from "@ionic/react";
 import { useState } from "react";
 import { useHistory, useLocation } from "react-router";
+import "./PageTheme.css";
 
 const ResetPassword: React.FC = () => {
   const history = useHistory();
@@ -59,18 +60,18 @@ const ResetPassword: React.FC = () => {
   };
 
   return (
-    <IonPage>
+    <IonPage className="light-page">
       <IonHeader>
-        <IonToolbar>
+        <IonToolbar className="light-toolbar">
           <IonTitle>Reset Password</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding">
+      <IonContent className="ion-padding light-content">
         {error && <IonText color="danger"><p>{error}</p></IonText>}
         {info && <IonText color="success"><p>{info}</p></IonText>}
 
-        <IonItem>
+        <IonItem className="light-item">
           <IonLabel position="stacked">Email</IonLabel>
           <IonInput
             value={email}
@@ -78,7 +79,7 @@ const ResetPassword: React.FC = () => {
           />
         </IonItem>
 
-        <IonItem>
+        <IonItem className="light-item">
           <IonLabel position="stacked">6-digit code</IonLabel>
           <IonInput
             value={code}
@@ -86,7 +87,7 @@ const ResetPassword: React.FC = () => {
           />
         </IonItem>
 
-        <IonItem>
+        <IonItem className="light-item">
           <IonLabel position="stacked">New password</IonLabel>
           <IonInput
             type="password"
@@ -95,7 +96,7 @@ const ResetPassword: React.FC = () => {
           />
         </IonItem>
 
-        <IonItem>
+        <IonItem className="light-item">
           <IonLabel position="stacked">Confirm new password</IonLabel>
           <IonInput
             type="password"
@@ -104,7 +105,7 @@ const ResetPassword: React.FC = () => {
           />
         </IonItem>
 
-        <IonButton expand="block" className="ion-margin-top" onClick={handleReset}>
+        <IonButton expand="block" className="ion-margin-top light-primary-button" onClick={handleReset}>
           Reset password
         </IonButton>
       </IonContent>

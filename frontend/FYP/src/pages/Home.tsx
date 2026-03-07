@@ -20,7 +20,7 @@ const Home: React.FC = () => {
     <IonPage className="home-page">
       <IonHeader>
         <IonToolbar className="home-toolbar">
-          <IonTitle>Welcome</IonTitle>
+          <IonTitle className="ion-text-center">Home</IonTitle>
         </IonToolbar>
       </IonHeader>
 

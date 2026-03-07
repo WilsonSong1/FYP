@@ -1,0 +1,53 @@
+.light-page {
+  --ion-background-color: #f7fbff;
+  --ion-text-color: #000000;
+  color: #000000;
+}
+
+.light-toolbar {
+  --background: #eaf4ff;
+  --color: #000000;
+}
+
+.light-toolbar ion-title.ion-text-center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+.light-content {
+  --background: linear-gradient(180deg, #f7fbff 0%, #eef7ff 100%);
+  --color: #000000;
+  color: #000000;
+}
+
+.light-item {
+  --background: rgba(255, 255, 255, 0.92);
+  --color: #000000;
+  --border-color: #d8e8f8;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.light-primary-button {
+  --background: #6f9fcc;
+  --background-hover: #648fb8;
+  --color: #000000;
+  --border-radius: 10px;
+}
+
+.light-link-button {
+  --color: #000000;
+}
+
+.light-heading {
+  color: #000000;
+}
+
+.light-panel {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #d8e8f8;
+  border-radius: 12px;
+}

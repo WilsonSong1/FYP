@@ -15,6 +15,7 @@ import React, {useState, useRef, useEffect} from "react";
 import { useHistory } from "react-router";
 
 import './ChatBot.css';
+import "./PageTheme.css";
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -65,15 +66,18 @@ const Home: React.FC = () => {
   }), [(chat)];
 
   return (
-    <IonPage>
+    <IonPage className="light-page">
       <IonHeader>
-        <IonToolbar>
+        <IonToolbar className="light-toolbar">
           <IonButton
+            slot="start"
+            className="light-link-button"
             fill="clear" size="large" onClick={() => history.push("/home")}> Home </IonButton>
+          <IonTitle className="ion-text-center">Chat Bot</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding">
+      <IonContent className="ion-padding light-content">
         <div className="chat-container">
           {chat.map((entry, idx) => (
             <React.Fragment key={idx}>
@@ -109,7 +113,7 @@ const Home: React.FC = () => {
               value={message}
               onIonChange={(e) => setMessage(e.detail.value || "")}
             />
-            <IonButton type="submit">Send</IonButton>
+            <IonButton className="light-primary-button" type="submit">Send</IonButton>
           </IonItem>
         </form>
       </IonFooter>
