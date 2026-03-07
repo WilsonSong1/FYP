@@ -52,7 +52,7 @@ async def chat(request: Request):
     userMessage = data.get("message", "")
     response = client.chat.completions.create(
     extra_body={"skip_special_tokens": True},
-    model="deepseek/deepseek-r1-0528:free",
+    model="qwen/qwen3-next-80b-a3b-instruct:free",
     messages=[
               {"role": "system", "content": "You are a tutor for a university student in software development"},
               {"role": "user", "content": userMessage}
