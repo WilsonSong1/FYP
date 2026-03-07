@@ -97,17 +97,21 @@ const Home: React.FC = () => {
       </IonContent>
 
       <IonFooter>
-        <IonItem className="input-bar" lines="none">
-          <IonInput
-            placeholder="Type your message..."
-            value={message}
-            onIonChange={(e) => setMessage(e.detail.value || "")}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") sendMessage();
-            }}
-          />
-          <IonButton onClick={sendMessage}>Send</IonButton>
-        </IonItem>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendMessage();
+          }}
+        >
+          <IonItem className="input-bar" lines="none">
+            <IonInput
+              placeholder="Type your message..."
+              value={message}
+              onIonChange={(e) => setMessage(e.detail.value || "")}
+            />
+            <IonButton type="submit">Send</IonButton>
+          </IonItem>
+        </form>
       </IonFooter>
     </IonPage>
   );
