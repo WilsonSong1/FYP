@@ -11,20 +11,21 @@ import {
   IonCol
 } from "@ionic/react";
 import { useHistory } from "react-router";
+import "./Home.css";
 
 const Home: React.FC = () => {
   const history = useHistory();
 
   return (
-    <IonPage>
+    <IonPage className="home-page">
       <IonHeader>
-        <IonToolbar>
+        <IonToolbar className="home-toolbar">
           <IonTitle>Welcome</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="ion-padding">
-        <IonGrid>
+      <IonContent className="ion-padding home-content">
+        <IonGrid className="home-grid">
           <IonRow className="ion-text-center">
             <IonCol size="12">
               <IonText>
@@ -33,22 +34,22 @@ const Home: React.FC = () => {
             </IonCol>
           </IonRow>
 
-          <IonRow>
-            <IonCol>
-              <IonButton expand="block" onClick={() => history.push("/login")}>
+          <IonRow className="home-buttons-row ion-justify-content-center">
+            <IonCol size="12" sizeMd="6" className="home-buttons-col">
+              <IonButton className="home-button" onClick={() => history.push("/login")}>
                 Login
               </IonButton>
 
-              <IonButton expand="block" onClick={() => history.push("/chatbot")}>
+              <IonButton className="home-button" onClick={() => history.push("/chatbot")}>
                 Chat Bot
               </IonButton>
 
-              <IonButton expand="block" onClick={() => history.push("/quiz")}>
+              <IonButton className="home-button" onClick={() => history.push("/quiz")}>
                 MCQ Quiz
               </IonButton>
 
               <IonButton
-                expand="block"
+                className="home-button"
                 color="secondary"
                 onClick={() => history.push("/signup")}
               >
