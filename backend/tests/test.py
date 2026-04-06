@@ -72,3 +72,39 @@ def test_login_with_wrong_username_returns_400():
     assert response.json()["detail"] == "Invalid username"
 
     Base.metadata.drop_all(bind=engine)
+
+
+def test_root_returns_cors_message():
+    client = TestClient(app)
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "CORS is working"}
+
+
+def test_api_data_returns_expected_list():
+    client = TestClient(app)
+    response = client.get("/api/data")
+
+    assert response.status_code == 200
+    assert response.json() == {"data": [1, 2, 3, 4]}
+
+
+def test_login_missing_password_returns_422():
+    client = TestClient(app)
+    response = client.post(
+        "/login",
+        json={"username": "validuser"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_signup_missing_email_returns_422():
+    client = TestClient(app)
+    response = client.post(
+        "/signup",
+        json={"username": "user1", "password": "password123"},
+    )
+
+    assert response.status_code == 422
