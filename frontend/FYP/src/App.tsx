@@ -8,6 +8,7 @@ import ChatBot from "./pages/ChatBot"
 import ForgotPass from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword'
 import Quiz from './pages/Quiz'
+import Profile from './pages/Profile'
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -71,6 +72,10 @@ const App: React.FC = () => (
 
         <Route exact path="/quiz">
           <Quiz />
+        </Route>
+
+        <Route exact path="/profile">
+          <Profile />
         </Route>
 
         <Route exact path="/">

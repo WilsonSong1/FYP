@@ -16,10 +16,45 @@ import "./Home.css";
 const Home: React.FC = () => {
   const history = useHistory();
 
+  const handleProfileClick = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      history.push("/signup");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        history.push("/signup");
+        return;
+      }
+
+      const data = await response.json();
+      localStorage.setItem("username", data.username);
+    } catch {
+      history.push("/signup");
+      return;
+    }
+
+    history.push("/profile");
+  };
+
   return (
     <IonPage className="home-page">
       <IonHeader>
         <IonToolbar className="home-toolbar">
+          <IonButton slot="end" fill="clear" onClick={handleProfileClick}>
+            Profile
+          </IonButton>
           <IonTitle className="ion-text-center">Home</IonTitle>
         </IonToolbar>
       </IonHeader>

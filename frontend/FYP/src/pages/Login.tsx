@@ -36,6 +36,7 @@ const Login: React.FC = () => {
     }
 
     localStorage.setItem("token", data.access_token);
+    localStorage.setItem("username", username);
 
     history.push("/home");
   };

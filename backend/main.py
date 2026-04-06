@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Request, Depends, HTTPException, Depends, HTTPException
+from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -6,7 +8,7 @@ from openai import OpenAI
 from datetime import datetime, timedelta
 from database import SessionLocal, engine
 from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest, QuizRequest, QuizResponse
-from auth import hash_password, verify_password, create_access_token
+from auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 from emailUtil import  send_reset_code_email
 import random
 import os
@@ -37,6 +39,19 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key = apiKey
 )
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+
+
+def get_current_username(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return username
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 @app.get("/")
 def root():
@@ -106,6 +121,11 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     token = create_access_token({"sub": db_user.username})
 
     return {"access_token": token, "token_type": "bearer"}
+
+
+@app.get("/me")
+def me(username: str = Depends(get_current_username)):
+    return {"username": username}
 
 @app.post("/forgot-password/request")
 def request_password_reset(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
