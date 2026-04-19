@@ -19,6 +19,7 @@ const Profile: React.FC = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
     history.replace("/home");
+    window.location.reload();
   };
 
   useEffect(() => {

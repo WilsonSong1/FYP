@@ -10,11 +10,47 @@ import {
   IonRow,
   IonCol
 } from "@ionic/react";
+import { useEffect, useState } from "react";
 import { useHistory } from "react-router";
 import "./Home.css";
 
 const Home: React.FC = () => {
   const history = useHistory();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setIsLoggedIn(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("username");
+          setIsLoggedIn(false);
+          return;
+        }
+
+        const data = await response.json();
+        localStorage.setItem("username", data.username);
+        setIsLoggedIn(true);
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const handleProfileClick = async () => {
     const token = localStorage.getItem("token");
@@ -71,9 +107,11 @@ const Home: React.FC = () => {
 
           <IonRow className="home-buttons-row ion-justify-content-center">
             <IonCol size="12" sizeMd="6" className="home-buttons-col">
-              <IonButton className="home-button" onClick={() => history.push("/login")}>
-                Login
-              </IonButton>
+              {!isLoggedIn && (
+                <IonButton className="home-button" onClick={() => history.push("/login")}>
+                  Login
+                </IonButton>
+              )}
 
               <IonButton className="home-button" onClick={() => history.push("/chatbot")}>
                 Chat Bot
@@ -83,13 +121,15 @@ const Home: React.FC = () => {
                 MCQ Quiz
               </IonButton>
 
-              <IonButton
-                className="home-button"
-                color="secondary"
-                onClick={() => history.push("/signup")}
-              >
-                Sign Up
-              </IonButton>
+              {!isLoggedIn && (
+                <IonButton
+                  className="home-button"
+                  color="secondary"
+                  onClick={() => history.push("/signup")}
+                >
+                  Sign Up
+                </IonButton>
+              )}
             </IonCol>
           </IonRow>
         </IonGrid>
