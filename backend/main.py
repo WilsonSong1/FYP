@@ -31,13 +31,14 @@ app.add_middleware(
 )
 
 apiKey = os.getenv("AIKEY")
+ai_model = "google/gemma-4-26b-a4b-it:free"
 print("Loaded API KEY:" , bool(apiKey))
 
 models.Base.metadata.create_all(bind=engine)
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key = apiKey
+    api_key = apiKey,
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
@@ -67,11 +68,12 @@ async def chat(request: Request):
     userMessage = data.get("message", "")
     response = client.chat.completions.create(
     extra_body={"skip_special_tokens": True},
-    model="qwen/qwen3-next-80b-a3b-instruct:free",
+    model= ai_model,
     messages=[
-              {"role": "system", "content": "You are a tutor for a university student in software development"},
-              {"role": "user", "content": userMessage}
-            ]
+              {"role": "system", "content": "You are a tutor for students. Explain concepts clearly, step by step, "
+                                            "in simple language, and make sure the student understands the answer."},
+              {"role": "user", "content": userMessage}  
+            ]   
 )
     ai_reply = response.choices[0].message.content
     return {"reply": ai_reply}
@@ -195,7 +197,7 @@ Do not include explanations or extra text.
 """
     
     response = client.responses.create(
-        model="deepseek/deepseek-r1-0528:free",
+        model= ai_model,
         input=[
             {
                 "role": "system",
