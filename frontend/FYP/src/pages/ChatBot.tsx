@@ -21,6 +21,7 @@ import "./PageTheme.css";
 
 const Home: React.FC = () => {
   const history = useHistory();
+  const isSignedIn = Boolean(localStorage.getItem("token"));
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<{user: String; ai: string}[]>([]);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -141,13 +142,15 @@ const Home: React.FC = () => {
 
                   {activeMenuIndex === idx && (
                     <div className="message-actions-menu" role="menu" aria-label="Message options">
-                      <button
-                        type="button"
-                        className="message-actions-menu-item"
-                        onClick={() => setActiveMenuIndex(null)}
-                      >
-                        Save this text
-                      </button>
+                      {isSignedIn && (
+                        <button
+                          type="button"
+                          className="message-actions-menu-item"
+                          onClick={() => setActiveMenuIndex(null)}
+                        >
+                          Save this text to profile
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="message-actions-menu-item"
