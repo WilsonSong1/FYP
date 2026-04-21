@@ -100,7 +100,7 @@ const Home: React.FC = () => {
   //Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth"});
-  }), [(chat)];
+  }, [chat]);
 
   return (
     <IonPage className="light-page">
@@ -186,6 +186,12 @@ const Home: React.FC = () => {
               placeholder="Type your message..."
               value={message}
               onIonChange={(e) => setMessage(e.detail.value || "")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
             />
             <IonButton className="light-primary-button" type="submit">Send</IonButton>
           </IonItem>
