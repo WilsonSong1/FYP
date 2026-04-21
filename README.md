@@ -1,6 +1,6 @@
  AI Tutoring Application
 
-**FastAPI · Ionic React · PostgreSQL · OpenRouter AI**
+**FastAPI · Ionic React · PostgreSQL · MongoDB Atlas · OpenRouter AI**
 
 ---
 
