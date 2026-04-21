@@ -10,6 +10,7 @@ import {
     IonText,
     IonButton,
     IonIcon,
+  IonToast,
 } from '@ionic/react';
 import React, {useState, useRef, useEffect} from "react";
 import { useHistory } from "react-router";
@@ -25,6 +26,7 @@ const Home: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const [activeMessage, setActiveMessage] = useState<string>("");
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
+  const [copyToastOpen, setCopyToastOpen] = useState(false);
 
   const openMessageMenu = (index: number, aiMessage: string) => {
     setActiveMenuIndex((currentIndex) => (currentIndex === index ? null : index));
@@ -34,6 +36,7 @@ const Home: React.FC = () => {
   const copyMessage = async () => {
     try {
       await navigator.clipboard.writeText(activeMessage);
+      setCopyToastOpen(true);
     } catch (error) {
       console.error("Could not copy message:", error);
     } finally {
@@ -161,6 +164,15 @@ const Home: React.FC = () => {
           <div ref={chatEndRef} />
         </div>
       </IonContent>
+
+      <IonToast
+        isOpen={copyToastOpen}
+        message="Text copied to clipboard"
+        duration={2000}
+        onDidDismiss={() => setCopyToastOpen(false)}
+        position="bottom"
+        color="dark"
+      />
 
       <IonFooter>
         <form
