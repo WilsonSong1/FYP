@@ -106,7 +106,15 @@ cd backend
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
+pip install pymongo
 uvicorn main:app --reload
+```
+
+Add these environment variables in `backend/.env`:
+
+```env
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB_NAME=fyp
 ```
 
 Backend will run at:
