@@ -32,6 +32,9 @@ const Profile: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
+    localStorage.removeItem("darkMode");
+    setDarkMode(false);
+    applyTheme(false);
     history.replace("/home");
     window.location.reload();
   };
