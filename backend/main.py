@@ -24,7 +24,7 @@ app = FastAPI()
 
 @app.on_event("startup")
 def startup_event():
-    connect_to_mongo()
+    connect_to_mongo(raise_on_error=False)
 
 
 @app.on_event("shutdown")
@@ -73,7 +73,7 @@ def root():
 @app.get("/mongo-health")
 def mongo_health():
     try:
-        connect_to_mongo()
+        connect_to_mongo(raise_on_error=True)
         return {"status": "ok", "database": "mongodb"}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"MongoDB connection failed: {str(exc)}")
