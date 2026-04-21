@@ -14,6 +14,8 @@ import { useHistory } from "react-router";
 import { useEffect, useState } from "react";
 import "./PageTheme.css";
 
+const THEME_PREFERENCE_KEY = "themePreference";
+
 const Profile: React.FC = () => {
   const history = useHistory();
   const [username, setUsername] = useState("");
@@ -26,13 +28,14 @@ const Profile: React.FC = () => {
   const handleThemeChange = (enabled: boolean) => {
     setDarkMode(enabled);
     localStorage.setItem("darkMode", String(enabled));
+    localStorage.setItem(THEME_PREFERENCE_KEY, enabled ? "dark" : "light");
     applyTheme(enabled);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
-    localStorage.removeItem("darkMode");
+    localStorage.setItem("darkMode", "false");
     setDarkMode(false);
     applyTheme(false);
     history.replace("/home");
@@ -40,7 +43,11 @@ const Profile: React.FC = () => {
   };
 
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem("darkMode") === "true";
+    const savedThemePreference = localStorage.getItem(THEME_PREFERENCE_KEY);
+    const savedDarkMode =
+      savedThemePreference === "dark" ||
+      (savedThemePreference === null && localStorage.getItem("darkMode") === "true");
+
     setDarkMode(savedDarkMode);
     applyTheme(savedDarkMode);
 
