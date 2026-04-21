@@ -51,3 +51,66 @@
   border: 1px solid #d8e8f8;
   border-radius: 12px;
 }
+
+.theme-toggle-item {
+  margin-top: 12px;
+}
+
+body.dark-mode .light-page {
+  --ion-background-color: #2f2f2f;
+  --ion-text-color: #ffffff;
+  color: #ffffff;
+}
+
+body.dark-mode .light-toolbar {
+  --background: #3a3a3a;
+  --color: #ffffff;
+}
+
+body.dark-mode .light-content {
+  --background: #2f2f2f;
+  --color: #ffffff;
+  color: #ffffff;
+}
+
+body.dark-mode .light-item {
+  --background: #3d3d3d;
+  --color: #ffffff;
+  --border-color: #545454;
+}
+
+body.dark-mode .light-content ion-item {
+  --background: #3d3d3d;
+  --color: #ffffff;
+  --border-color: #545454;
+}
+
+body.dark-mode .light-content ion-input,
+body.dark-mode .light-content ion-select,
+body.dark-mode .light-content ion-radio,
+body.dark-mode .light-content ion-list {
+  --color: #ffffff;
+}
+
+body.dark-mode .light-content ion-input {
+  --placeholder-color: #d6d6d6;
+}
+
+body.dark-mode .light-primary-button {
+  --background: #505050;
+  --background-hover: #5b5b5b;
+  --color: #ffffff;
+}
+
+body.dark-mode .light-link-button {
+  --color: #ffffff;
+}
+
+body.dark-mode .light-heading,
+body.dark-mode .light-content h2,
+body.dark-mode .light-content h1,
+body.dark-mode .light-content p,
+body.dark-mode .light-content ion-label,
+body.dark-mode .light-content ion-text {
+  color: #ffffff;
+}

@@ -6,6 +6,9 @@ import {
   IonContent,
   IonButton,
   IonText,
+  IonItem,
+  IonLabel,
+  IonToggle,
 } from "@ionic/react";
 import { useHistory } from "react-router";
 import { useEffect, useState } from "react";
@@ -14,6 +17,17 @@ import "./PageTheme.css";
 const Profile: React.FC = () => {
   const history = useHistory();
   const [username, setUsername] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
+
+  const applyTheme = (enabled: boolean) => {
+    document.body.classList.toggle("dark-mode", enabled);
+  };
+
+  const handleThemeChange = (enabled: boolean) => {
+    setDarkMode(enabled);
+    localStorage.setItem("darkMode", String(enabled));
+    applyTheme(enabled);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -23,6 +37,10 @@ const Profile: React.FC = () => {
   };
 
   useEffect(() => {
+    const savedDarkMode = localStorage.getItem("darkMode") === "true";
+    setDarkMode(savedDarkMode);
+    applyTheme(savedDarkMode);
+
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -78,6 +96,15 @@ const Profile: React.FC = () => {
           <h2>Your Profile</h2>
           <p>Welcome back, {username || localStorage.getItem("username") || "User"}.</p>
         </IonText>
+
+        <IonItem className="light-item theme-toggle-item" lines="none">
+          <IonLabel>Dark Mode</IonLabel>
+          <IonToggle
+            slot="end"
+            checked={darkMode}
+            onIonChange={(event) => handleThemeChange(event.detail.checked)}
+          />
+        </IonItem>
 
         <IonButton className="ion-margin-top" expand="block" onClick={handleLogout}>
           Logout

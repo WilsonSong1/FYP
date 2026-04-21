@@ -66,3 +66,37 @@
   --placeholder-color: #4a4a4a;
   margin-right: 8px;
 }
+
+body.dark-mode .message-bubble {
+  border: 1px solid #5c5c5c;
+  box-shadow: none;
+}
+
+body.dark-mode .user-bubble {
+  background-color: #4a4a4a;
+  color: #ffffff;
+}
+
+body.dark-mode .ai-bubble {
+  background-color: #3d3d3d;
+  color: #ffffff;
+}
+
+body.dark-mode .message-author,
+body.dark-mode .message-text {
+  color: #ffffff;
+}
+
+body.dark-mode ion-footer {
+  --background: #2f2f2f;
+}
+
+body.dark-mode .input-bar {
+  --background: #3a3a3a;
+  --border-color: #545454;
+}
+
+body.dark-mode .input-bar ion-input {
+  --color: #ffffff;
+  --placeholder-color: #cfcfcf;
+}

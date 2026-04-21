@@ -1,6 +1,7 @@
 import { Redirect, Route } from 'react-router-dom';
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
+import { useEffect } from 'react';
 import Home from './pages/Home';
 import Login from "./pages/Login";
 import Signup from "./pages/Signup"
@@ -35,55 +36,61 @@ import '@ionic/react/css/display.css';
 
 /* import '@ionic/react/css/palettes/dark.always.css'; */
 /* import '@ionic/react/css/palettes/dark.class.css'; */
-import '@ionic/react/css/palettes/dark.system.css';
 
 /* Theme variables */
 import './theme/variables.css';
 
 setupIonicReact();
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/home">
-          <Home />
-        </Route>
-        
-        <Route exact path="/chatbot">
-          <ChatBot />
-        </Route>
+const App: React.FC = () => {
+  useEffect(() => {
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    document.body.classList.toggle('dark-mode', isDarkMode);
+  }, []);
 
-        <Route exact path="/login">
-          <Login />
-        </Route>
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <IonRouterOutlet>
+          <Route exact path="/home">
+            <Home />
+          </Route>
 
-        <Route exact path="/forgotpass">
-          <ForgotPass />
-        </Route>
+          <Route exact path="/chatbot">
+            <ChatBot />
+          </Route>
 
-        <Route exact path="/resetpass">
-          <ResetPassword />
-        </Route>
+          <Route exact path="/login">
+            <Login />
+          </Route>
 
-        <Route exact path="/signup">
-          <Signup />
-        </Route>
+          <Route exact path="/forgotpass">
+            <ForgotPass />
+          </Route>
 
-        <Route exact path="/quiz">
-          <Quiz />
-        </Route>
+          <Route exact path="/resetpass">
+            <ResetPassword />
+          </Route>
 
-        <Route exact path="/profile">
-          <Profile />
-        </Route>
+          <Route exact path="/signup">
+            <Signup />
+          </Route>
 
-        <Route exact path="/">
-          <Redirect to="/home" />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
-);
+          <Route exact path="/quiz">
+            <Quiz />
+          </Route>
+
+          <Route exact path="/profile">
+            <Profile />
+          </Route>
+
+          <Route exact path="/">
+            <Redirect to="/home" />
+          </Route>
+        </IonRouterOutlet>
+      </IonReactRouter>
+    </IonApp>
+  );
+};
 
 export default App;
