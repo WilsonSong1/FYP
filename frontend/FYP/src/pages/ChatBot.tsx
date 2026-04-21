@@ -1,7 +1,6 @@
 import { 
     IonContent, 
     IonHeader, 
-    IonList, 
     IonPage, 
     IonTitle, 
     IonToolbar,
@@ -9,10 +8,12 @@ import {
     IonItem, 
     IonInput,
     IonText,
-    IonButton 
+    IonButton,
+    IonIcon,
 } from '@ionic/react';
 import React, {useState, useRef, useEffect} from "react";
 import { useHistory } from "react-router";
+import { ellipsisVertical } from "ionicons/icons";
 
 import './ChatBot.css';
 import "./PageTheme.css";
@@ -22,6 +23,39 @@ const Home: React.FC = () => {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<{user: String; ai: string}[]>([]);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const [activeMessage, setActiveMessage] = useState<string>("");
+  const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
+
+  const openMessageMenu = (index: number, aiMessage: string) => {
+    setActiveMenuIndex((currentIndex) => (currentIndex === index ? null : index));
+    setActiveMessage(aiMessage);
+  };
+
+  const copyMessage = async () => {
+    try {
+      await navigator.clipboard.writeText(activeMessage);
+    } catch (error) {
+      console.error("Could not copy message:", error);
+    } finally {
+      setActiveMenuIndex(null);
+    }
+  };
+
+  useEffect(() => {
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      if (!target.closest(".ai-bubble-wrapper")) {
+        setActiveMenuIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleDocumentClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleDocumentClick);
+    };
+  }, []);
 
   const sendMessage = async() =>{
     if(!message.trim()) return;
@@ -89,9 +123,37 @@ const Home: React.FC = () => {
               </div>
 
               <div className="message-row ai-row">
-                <div className="message-bubble ai-bubble">
+                <div className="message-bubble ai-bubble ai-bubble-wrapper">
                   <IonText className="message-author">AI Tutor</IonText>
                   <p className="message-text">{entry.ai}</p>
+                  <IonButton
+                    className="ai-menu-button"
+                    fill="clear"
+                    size="small"
+                    onClick={() => openMessageMenu(idx, entry.ai)}
+                    aria-label="Open message options"
+                  >
+                    <IonIcon icon={ellipsisVertical} />
+                  </IonButton>
+
+                  {activeMenuIndex === idx && (
+                    <div className="message-actions-menu" role="menu" aria-label="Message options">
+                      <button
+                        type="button"
+                        className="message-actions-menu-item"
+                        onClick={() => setActiveMenuIndex(null)}
+                      >
+                        Save this text
+                      </button>
+                      <button
+                        type="button"
+                        className="message-actions-menu-item"
+                        onClick={copyMessage}
+                      >
+                        Copy text
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </React.Fragment>
