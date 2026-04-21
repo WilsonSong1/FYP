@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from datetime import datetime, timedelta
 from database import SessionLocal, engine
+from mongodb import connect_to_mongo, close_mongo_connection
 from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest, QuizRequest, QuizResponse
 from auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 from emailUtil import  send_reset_code_email
@@ -19,6 +20,16 @@ import re
 load_dotenv()
 
 app = FastAPI()
+
+
+@app.on_event("startup")
+def startup_event():
+    connect_to_mongo()
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    close_mongo_connection()
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +68,15 @@ def get_current_username(token: str = Depends(oauth2_scheme)):
 @app.get("/")
 def root():
     return {"message": "CORS is working"}
+
+
+@app.get("/mongo-health")
+def mongo_health():
+    try:
+        connect_to_mongo()
+        return {"status": "ok", "database": "mongodb"}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"MongoDB connection failed: {str(exc)}")
 
 @app.get("/api/data")
 def get_data():
