@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+backend/venv/
+backend/.venv/
+
+# Environment files and secrets
+.env
+.env.*
+backend/.env
+backend/.env.*
+!.env.example
+!backend/.env.example
+
+# Node / frontend
+node_modules/
+dist/
+coverage/
+.ionic/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
