@@ -9,6 +9,8 @@ import ChatBot from "./pages/ChatBot"
 import ForgotPass from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword'
 import Quiz from './pages/Quiz'
+import QuizGenerate from './pages/QuizGenerate'
+import QuizFromImage from './pages/QuizFromImage'
 import Profile from './pages/Profile'
 
 /* Core CSS required for Ionic components to work properly */
@@ -44,8 +46,9 @@ setupIonicReact();
 
 const App: React.FC = () => {
   useEffect(() => {
-    const isDarkMode = localStorage.getItem('darkMode') === 'true';
-    document.body.classList.toggle('dark-mode', isDarkMode);
+    localStorage.setItem('darkMode', 'false');
+    localStorage.setItem('themePreference', 'light');
+    document.body.classList.remove('dark-mode');
   }, []);
 
   return (
@@ -78,6 +81,14 @@ const App: React.FC = () => {
 
           <Route exact path="/quiz">
             <Quiz />
+          </Route>
+
+          <Route exact path="/quiz/generate">
+            <QuizGenerate />
+          </Route>
+
+          <Route exact path="/quiz/image">
+            <QuizFromImage />
           </Route>
 
           <Route exact path="/profile">
