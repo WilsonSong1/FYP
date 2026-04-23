@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi import FastAPI, Request, Depends, HTTPException, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
@@ -16,6 +16,8 @@ import os
 import models
 import json
 import re
+import io
+import fitz
 
 load_dotenv()
 
@@ -251,3 +253,89 @@ Do not include explanations or extra text.
         )
 
     return {"questions": questions}
+
+
+@app.post("/extract-text-from-image")
+async def extract_text_from_image(file: UploadFile = File(...)):
+    """
+    Extract text from image files using PyMuPDF.
+    Supports PDF and image formats.
+    """
+    print(f"\n{'='*80}")
+    print(f"START: Extract text from image - {file.filename}")
+    print(f"{'='*80}")
+    
+    try:
+        # Read the uploaded file
+        contents = await file.read()
+        print(f"[DEBUG] File size: {len(contents)} bytes")
+        print(f"[DEBUG] File content type: {file.content_type}")
+        
+        file_stream = io.BytesIO(contents)
+        extracted_text = ""
+        
+        # Try to open as PDF first (works for PDF and image files)
+        print(f"[DEBUG] Attempting to open file as PDF...")
+        try:
+            pdf_document = fitz.open(stream=file_stream, filetype="pdf")
+            print(f"[DEBUG] Successfully opened as PDF")
+            page_count = len(pdf_document)
+            print(f"[DEBUG] Document has {page_count} pages")
+            
+            for page_num in range(page_count):
+                page = pdf_document[page_num]
+                text = page.get_text()
+                print(f"[DEBUG] Page {page_num} extracted {len(text)} characters")
+                extracted_text += text
+            
+            pdf_document.close()
+            print(f"[DEBUG] Total extracted text length: {len(extracted_text)} characters")
+            
+        except Exception as pdf_error:
+            print(f"[DEBUG] PDF open failed: {str(pdf_error)}")
+            print(f"[DEBUG] Attempting to open file as image...")
+            
+            # If PDF fails, try as image
+            file_stream.seek(0)
+            try:
+                pdf_document = fitz.open(stream=file_stream, filetype="image")
+                print(f"[DEBUG] Successfully opened as image")
+                page_count = len(pdf_document)
+                print(f"[DEBUG] Document has {page_count} pages")
+                
+                for page_num in range(page_count):
+                    page = pdf_document[page_num]
+                    text = page.get_text()
+                    print(f"[DEBUG] Page {page_num} extracted {len(text)} characters")
+                    extracted_text += text
+                
+                pdf_document.close()
+                print(f"[DEBUG] Total extracted text length: {len(extracted_text)} characters")
+                
+            except Exception as img_error:
+                print(f"[ERROR] Image open failed: {str(img_error)}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Could not process file: {str(img_error)}"
+                )
+        
+        # Print to console
+        print(f"\n{'='*80}")
+        print(f"EXTRACTED TEXT FROM: {file.filename}")
+        print(f"{'='*80}")
+        if extracted_text.strip():
+            print(extracted_text)
+        else:
+            print("[WARNING] No text was extracted from the file")
+        print(f"{'='*80}\n")
+        
+        return {"extracted_text": extracted_text, "filename": file.filename}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] Unexpected error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error extracting text: {str(e)}"
+        )
