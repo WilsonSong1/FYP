@@ -13,10 +13,16 @@ import {
 } from "@ionic/react";
 import "./PageTheme.css";
 
+interface AnalysisResult {
+  filename: string;
+  summary: string;
+  key_points: string[];
+}
+
 const QuizFromImage: React.FC = () => {
   const history = useHistory();
   const [file, setFile] = useState<File | null>(null);
-  const [extractedText, setExtractedText] = useState<string>("");
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState<string>("");
 
@@ -25,11 +31,11 @@ const QuizFromImage: React.FC = () => {
     if (selectedFile) {
       setFile(selectedFile);
       setFileName(selectedFile.name);
-      setExtractedText("");
+      setAnalysis(null);
     }
   };
 
-  const handleExtractText = async () => {
+  const handleExtractAndAnalyze = async () => {
     if (!file) {
       alert("Please select an image file first");
       return;
@@ -50,11 +56,10 @@ const QuizFromImage: React.FC = () => {
       }
 
       const data = await res.json();
-      setExtractedText(data.extracted_text);
-      console.log("Extracted Text:", data.extracted_text);
+      setAnalysis(data);
     } catch (error) {
-      console.error("Error extracting text:", error);
-      alert("Failed to extract text from image");
+      console.error("Error processing image:", error);
+      alert("Failed to process image");
     } finally {
       setLoading(false);
     }
@@ -63,7 +68,7 @@ const QuizFromImage: React.FC = () => {
   const resetForm = () => {
     setFile(null);
     setFileName("");
-    setExtractedText("");
+    setAnalysis(null);
   };
 
   return (
@@ -84,7 +89,7 @@ const QuizFromImage: React.FC = () => {
       </IonHeader>
 
       <IonContent className="ion-padding light-content">
-        {!extractedText && (
+        {!analysis && (
           <>
             <div style={{ marginBottom: "20px" }}>
               <label
@@ -130,10 +135,10 @@ const QuizFromImage: React.FC = () => {
             <IonButton
               className="light-primary-button"
               expand="block"
-              onClick={handleExtractText}
+              onClick={handleExtractAndAnalyze}
               disabled={loading || !file}
             >
-              {loading ? "Extracting..." : "Extract Text from Image"}
+              {loading ? "Analyzing..." : "Analyze Image"}
             </IonButton>
 
             {loading && (
@@ -149,14 +154,14 @@ const QuizFromImage: React.FC = () => {
               >
                 <IonSpinner name="circles" color="primary" />
                 <p style={{ fontSize: "16px", fontWeight: "500" }}>
-                  Extracting text from image...
+                  Analyzing image...
                 </p>
               </div>
             )}
           </>
         )}
 
-        {extractedText && (
+        {analysis && (
           <>
             <div
               style={{
@@ -168,15 +173,34 @@ const QuizFromImage: React.FC = () => {
               }}
             >
               <IonText>
-                <h3>Extracted Text</h3>
-                <p style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
-                  {extractedText}
-                </p>
+                <h3>Summary</h3>
+                <p>{analysis.summary}</p>
               </IonText>
             </div>
 
+            {analysis.key_points && analysis.key_points.length > 0 && (
+              <div
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.92)",
+                  padding: "15px",
+                  borderRadius: "10px",
+                  marginBottom: "20px",
+                  borderLeft: "5px solid #6f9fcc",
+                }}
+              >
+                <IonText>
+                  <h3>Key Points</h3>
+                  <ul>
+                    {analysis.key_points.map((point, index) => (
+                      <li key={index}>{point}</li>
+                    ))}
+                  </ul>
+                </IonText>
+              </div>
+            )}
+
             <IonButton className="light-primary-button" expand="block" onClick={resetForm}>
-              Extract Another Image
+              Analyze Another Image
             </IonButton>
           </>
         )}

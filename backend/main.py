@@ -258,84 +258,82 @@ Do not include explanations or extra text.
 @app.post("/extract-text-from-image")
 async def extract_text_from_image(file: UploadFile = File(...)):
     """
-    Extract text from image files using PyMuPDF.
-    Supports PDF and image formats.
+    Extract text from image files using PyMuPDF, then send to AI for summarization.
     """
-    print(f"\n{'='*80}")
-    print(f"START: Extract text from image - {file.filename}")
-    print(f"{'='*80}")
-    
     try:
-        # Read the uploaded file
         contents = await file.read()
-        print(f"[DEBUG] File size: {len(contents)} bytes")
-        print(f"[DEBUG] File content type: {file.content_type}")
-        
         file_stream = io.BytesIO(contents)
         extracted_text = ""
         
-        # Try to open as PDF first (works for PDF and image files)
-        print(f"[DEBUG] Attempting to open file as PDF...")
         try:
             pdf_document = fitz.open(stream=file_stream, filetype="pdf")
-            print(f"[DEBUG] Successfully opened as PDF")
-            page_count = len(pdf_document)
-            print(f"[DEBUG] Document has {page_count} pages")
-            
-            for page_num in range(page_count):
+            for page_num in range(len(pdf_document)):
                 page = pdf_document[page_num]
-                text = page.get_text()
-                print(f"[DEBUG] Page {page_num} extracted {len(text)} characters")
-                extracted_text += text
-            
+                extracted_text += page.get_text()
             pdf_document.close()
-            print(f"[DEBUG] Total extracted text length: {len(extracted_text)} characters")
-            
-        except Exception as pdf_error:
-            print(f"[DEBUG] PDF open failed: {str(pdf_error)}")
-            print(f"[DEBUG] Attempting to open file as image...")
-            
-            # If PDF fails, try as image
+        except Exception:
             file_stream.seek(0)
             try:
                 pdf_document = fitz.open(stream=file_stream, filetype="image")
-                print(f"[DEBUG] Successfully opened as image")
-                page_count = len(pdf_document)
-                print(f"[DEBUG] Document has {page_count} pages")
-                
-                for page_num in range(page_count):
+                for page_num in range(len(pdf_document)):
                     page = pdf_document[page_num]
-                    text = page.get_text()
-                    print(f"[DEBUG] Page {page_num} extracted {len(text)} characters")
-                    extracted_text += text
-                
+                    extracted_text += page.get_text()
                 pdf_document.close()
-                print(f"[DEBUG] Total extracted text length: {len(extracted_text)} characters")
-                
             except Exception as img_error:
-                print(f"[ERROR] Image open failed: {str(img_error)}")
                 raise HTTPException(
                     status_code=400,
                     detail=f"Could not process file: {str(img_error)}"
                 )
         
-        # Print to console
-        print(f"\n{'='*80}")
-        print(f"EXTRACTED TEXT FROM: {file.filename}")
-        print(f"{'='*80}")
-        if extracted_text.strip():
-            print(extracted_text)
-        else:
-            print("[WARNING] No text was extracted from the file")
-        print(f"{'='*80}\n")
+        if not extracted_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="No text could be extracted from the image"
+            )
         
-        return {"extracted_text": extracted_text, "filename": file.filename}
+        prompt = f"""Please analyze the following text and provide:
+1. A concise summary (3-5 sentences)
+2. Key points (as a bullet list, max 6 points)
+
+Text:
+{extracted_text}
+
+Format your response as JSON with keys "summary" and "key_points" (array).
+"""
+        
+        response = client.chat.completions.create(
+            extra_body={"skip_special_tokens": True},
+            model=ai_model,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that summarizes text and extracts key points. Always respond with valid JSON."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        ai_response = response.choices[0].message.content
+        
+        try:
+            json_match = re.search(r'\{[\s\S]*\}', ai_response)
+            if json_match:
+                result = json.loads(json_match.group(0))
+            else:
+                result = json.loads(ai_response)
+        except json.JSONDecodeError:
+            result = {
+                "summary": ai_response,
+                "key_points": []
+            }
+        
+        return {
+            "filename": file.filename,
+            "summary": result.get("summary", ""),
+            "key_points": result.get("key_points", [])
+        }
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[ERROR] Unexpected error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error extracting text: {str(e)}"
+            detail=f"Error processing image: {str(e)}"
         )
