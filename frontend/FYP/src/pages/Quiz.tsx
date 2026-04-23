@@ -32,16 +32,14 @@ const Quiz: React.FC = () => {
 
       <IonContent className="ion-padding light-content">
         <IonButton
-          className="light-primary-button"
-          expand="block"
+          className="quiz-option-button"
           onClick={() => history.push("/quiz/generate")}
         >
           Generate quiz
         </IonButton>
 
         <IonButton
-          className="light-primary-button ion-margin-top"
-          expand="block"
+          className="quiz-option-button ion-margin-top"
           onClick={() => history.push("/quiz/image")}
         >
           Generate quiz from image

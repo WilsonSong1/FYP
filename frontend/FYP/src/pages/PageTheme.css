@@ -42,6 +42,18 @@
   --color: #000000;
 }
 
+.quiz-option-button {
+  display: block;
+  width: min(100%, 360px);
+  min-height: 46px;
+  --color: #000000;
+  --border-radius: 10px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  font-size: 1rem;
+  margin-inline: auto;
+}
+
 .light-heading {
   color: #000000;
 }
@@ -103,6 +115,10 @@ body.dark-mode .light-primary-button {
 }
 
 body.dark-mode .light-link-button {
+  --color: #ffffff;
+}
+
+body.dark-mode .quiz-option-button {
   --color: #ffffff;
 }
 
