@@ -17,7 +17,14 @@ def hash_password(password: str):
 
 def verify_password(plain_password, hashed_password):
     plain_password = safe_password(plain_password)
-    return pwd_context.verify(plain_password, hashed_password)
+
+    if not isinstance(hashed_password, str) or not hashed_password.startswith("$2"):
+        return False
+
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception:
+        return False
 
 def create_access_token(data: dict, expires_days=1):
     to_encode = data.copy()

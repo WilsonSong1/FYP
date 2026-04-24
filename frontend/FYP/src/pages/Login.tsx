@@ -24,6 +24,11 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
 
   const loginUser = async () => {
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    setError("");
+
     const response = await fetch("http://127.0.0.1:8000/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -33,6 +38,7 @@ const Login: React.FC = () => {
     const data = await response.json();
 
     if (!response.ok) {
+      localStorage.removeItem("username");
       setError(data.detail);
       return;
     }
