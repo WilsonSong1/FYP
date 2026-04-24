@@ -8,7 +8,7 @@ from openai import OpenAI
 from datetime import datetime, timedelta
 from database import SessionLocal, engine
 from mongodb import connect_to_mongo, close_mongo_connection, get_mongo_db
-from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest, QuizRequest, QuizResponse, SaveTextRequest
+from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest, QuizRequest, QuizResponse, SaveTextRequest, FriendRequestCreate
 from auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 from emailUtil import  send_reset_code_email
 import random
@@ -427,3 +427,135 @@ async def delete_saved_text(text_id: str, username: str = Depends(get_current_us
             status_code=500,
             detail=f"Error deleting text: {str(e)}"
         )
+
+
+@app.post("/friends/request")
+def send_friend_request(payload: FriendRequestCreate, username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    from_user = db.query(models.User).filter(models.User.username == username).first()
+    target_user = db.query(models.User).filter(models.User.username == payload.username).first()
+
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Username does not exist")
+
+    if not from_user:
+        raise HTTPException(status_code=401, detail="Invalid user")
+
+    if target_user.id == from_user.id:
+        raise HTTPException(status_code=400, detail="You cannot add yourself")
+
+    user_one_id = min(from_user.id, target_user.id)
+    user_two_id = max(from_user.id, target_user.id)
+
+    existing_friendship = db.query(models.Friendship).filter(
+        models.Friendship.user_one_id == user_one_id,
+        models.Friendship.user_two_id == user_two_id,
+    ).first()
+
+    if existing_friendship:
+        raise HTTPException(status_code=400, detail="You are already friends")
+
+    existing_request = db.query(models.FriendRequest).filter(
+        models.FriendRequest.from_user_id == from_user.id,
+        models.FriendRequest.to_user_id == target_user.id,
+        models.FriendRequest.status == "pending",
+    ).first()
+
+    if existing_request:
+        raise HTTPException(status_code=400, detail="Friend request already sent")
+
+    reverse_pending_request = db.query(models.FriendRequest).filter(
+        models.FriendRequest.from_user_id == target_user.id,
+        models.FriendRequest.to_user_id == from_user.id,
+        models.FriendRequest.status == "pending",
+    ).first()
+
+    if reverse_pending_request:
+        raise HTTPException(status_code=400, detail="This user has already sent you a friend request")
+
+    request = models.FriendRequest(
+        from_user_id=from_user.id,
+        to_user_id=target_user.id,
+        status="pending",
+    )
+    db.add(request)
+    db.commit()
+
+    return {"message": "Friend request sent"}
+
+
+@app.get("/friends/requests")
+def get_incoming_friend_requests(username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    current_user = db.query(models.User).filter(models.User.username == username).first()
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Invalid user")
+
+    requests = db.query(models.FriendRequest).filter(
+        models.FriendRequest.to_user_id == current_user.id,
+        models.FriendRequest.status == "pending",
+    ).all()
+
+    results = []
+    for request in requests:
+        sender = db.query(models.User).filter(models.User.id == request.from_user_id).first()
+        if sender:
+            results.append({
+                "request_id": request.id,
+                "from_username": sender.username,
+                "created_at": request.created_at.isoformat() if request.created_at else None,
+            })
+
+    return {"requests": results}
+
+
+@app.post("/friends/requests/{request_id}/accept")
+def accept_friend_request(request_id: int, username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    current_user = db.query(models.User).filter(models.User.username == username).first()
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Invalid user")
+
+    request = db.query(models.FriendRequest).filter(
+        models.FriendRequest.id == request_id,
+        models.FriendRequest.to_user_id == current_user.id,
+        models.FriendRequest.status == "pending",
+    ).first()
+
+    if not request:
+        raise HTTPException(status_code=404, detail="Friend request not found")
+
+    user_one_id = min(request.from_user_id, request.to_user_id)
+    user_two_id = max(request.from_user_id, request.to_user_id)
+
+    existing_friendship = db.query(models.Friendship).filter(
+        models.Friendship.user_one_id == user_one_id,
+        models.Friendship.user_two_id == user_two_id,
+    ).first()
+
+    if not existing_friendship:
+        friendship = models.Friendship(user_one_id=user_one_id, user_two_id=user_two_id)
+        db.add(friendship)
+
+    request.status = "accepted"
+    db.commit()
+
+    return {"message": "Friend request accepted"}
+
+
+@app.get("/friends/list")
+def get_friends_list(username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    current_user = db.query(models.User).filter(models.User.username == username).first()
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Invalid user")
+
+    friendships = db.query(models.Friendship).filter(
+        (models.Friendship.user_one_id == current_user.id) |
+        (models.Friendship.user_two_id == current_user.id)
+    ).all()
+
+    friend_usernames = []
+    for friendship in friendships:
+        friend_id = friendship.user_two_id if friendship.user_one_id == current_user.id else friendship.user_one_id
+        friend = db.query(models.User).filter(models.User.id == friend_id).first()
+        if friend:
+            friend_usernames.append(friend.username)
+
+    return {"friends": friend_usernames}

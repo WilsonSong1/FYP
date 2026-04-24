@@ -40,3 +40,7 @@ class QuizResponse(BaseModel):
 
 class SaveTextRequest(BaseModel):
     text: str
+
+
+class FriendRequestCreate(BaseModel):
+    username: str
