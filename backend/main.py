@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from datetime import datetime, timedelta
 from database import SessionLocal, engine
-from mongodb import connect_to_mongo, close_mongo_connection
-from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest, QuizRequest, QuizResponse
+from mongodb import connect_to_mongo, close_mongo_connection, get_mongo_db
+from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest, QuizRequest, QuizResponse, SaveTextRequest
 from auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 from emailUtil import  send_reset_code_email
 import random
@@ -336,4 +336,36 @@ Format your response as JSON with keys "summary" and "key_points" (array).
         raise HTTPException(
             status_code=500,
             detail=f"Error processing image: {str(e)}"
+        )
+
+@app.post("/save-text-to-profile")
+async def save_text_to_profile(data: SaveTextRequest, username: str = Depends(get_current_username)):
+    """
+    Save AI-generated text to user's profile in MongoDB
+    """
+    try:
+        db = get_mongo_db()
+        
+        # Get or create user's saved texts collection
+        users_collection = db["users"]
+        
+        # Create a new saved text document
+        saved_text_doc = {
+            "username": username,
+            "text": data.text,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert into collection
+        result = users_collection.insert_one(saved_text_doc)
+        
+        return {
+            "message": "Text saved to profile successfully",
+            "saved_text_id": str(result.inserted_id)
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error saving text: {str(e)}"
         )

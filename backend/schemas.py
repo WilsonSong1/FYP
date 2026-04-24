@@ -37,3 +37,6 @@ class QuizQuestion(BaseModel):
 
 class QuizResponse(BaseModel):
     questions: List[QuizQuestion]
+
+class SaveTextRequest(BaseModel):
+    text: str

@@ -28,6 +28,9 @@ const Home: React.FC = () => {
   const [activeMessage, setActiveMessage] = useState<string>("");
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
   const [copyToastOpen, setCopyToastOpen] = useState(false);
+  const [saveToastOpen, setSaveToastOpen] = useState(false);
+  const [saveToastMessage, setSaveToastMessage] = useState("");
+
 
   const openMessageMenu = (index: number, aiMessage: string) => {
     setActiveMenuIndex((currentIndex) => (currentIndex === index ? null : index));
@@ -40,6 +43,39 @@ const Home: React.FC = () => {
       setCopyToastOpen(true);
     } catch (error) {
       console.error("Could not copy message:", error);
+    } finally {
+      setActiveMenuIndex(null);
+    }
+  };
+
+  const saveMessage = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setSaveToastMessage("You must be signed in to save text");
+        setSaveToastOpen(true);
+        return;
+      }
+
+      const response = await fetch("http://127.0.0.1:8000/save-text-to-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ text: activeMessage }),
+      });
+
+      if (response.ok) {
+        setSaveToastMessage("Text saved to profile successfully!");
+      } else {
+        setSaveToastMessage("Failed to save text");
+      }
+      setSaveToastOpen(true);
+    } catch (error) {
+      console.error("Could not save message:", error);
+      setSaveToastMessage("Error saving text");
+      setSaveToastOpen(true);
     } finally {
       setActiveMenuIndex(null);
     }
@@ -146,7 +182,7 @@ const Home: React.FC = () => {
                         <button
                           type="button"
                           className="message-actions-menu-item"
-                          onClick={() => setActiveMenuIndex(null)}
+                          onClick={saveMessage}
                         >
                           Save this text to profile
                         </button>
@@ -173,6 +209,15 @@ const Home: React.FC = () => {
         message="Text copied to clipboard"
         duration={2000}
         onDidDismiss={() => setCopyToastOpen(false)}
+        position="bottom"
+        color="dark"
+      />
+
+      <IonToast
+        isOpen={saveToastOpen}
+        message={saveToastMessage}
+        duration={2000}
+        onDidDismiss={() => setSaveToastOpen(false)}
         position="bottom"
         color="dark"
       />
