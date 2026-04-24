@@ -11,11 +11,11 @@ import {
   IonCol
 } from "@ionic/react";
 import { useEffect, useState } from "react";
-import { useHistory } from "react-router";
+import { useIonRouter } from "@ionic/react";
 import "./Home.css";
 
 const Home: React.FC = () => {
-  const history = useHistory();
+  const ionRouter = useIonRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ const Home: React.FC = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      history.push("/signup");
+      ionRouter.push("/signup");
       return;
     }
 
@@ -70,18 +70,18 @@ const Home: React.FC = () => {
       if (!response.ok) {
         localStorage.removeItem("token");
         localStorage.removeItem("username");
-        history.push("/signup");
+        ionRouter.push("/signup");
         return;
       }
 
       const data = await response.json();
       localStorage.setItem("username", data.username);
     } catch {
-      history.push("/signup");
+      ionRouter.push("/signup");
       return;
     }
 
-    history.push("/profile");
+    ionRouter.push("/profile");
   };
 
   return (
@@ -108,16 +108,16 @@ const Home: React.FC = () => {
           <IonRow className="home-buttons-row ion-justify-content-center">
             <IonCol size="12" sizeMd="6" className="home-buttons-col">
               {!isLoggedIn && (
-                <IonButton className="home-button" onClick={() => history.push("/login")}>
+                <IonButton className="home-button" onClick={() => ionRouter.push("/login")}>
                   Login
                 </IonButton>
               )}
 
-              <IonButton className="home-button" onClick={() => history.push("/chatbot")}>
+              <IonButton className="home-button" onClick={() => ionRouter.push("/chatbot")}>
                 Chat Bot
               </IonButton>
 
-              <IonButton className="home-button" onClick={() => history.push("/quiz")}>
+              <IonButton className="home-button" onClick={() => ionRouter.push("/quiz")}>
                 MCQ Quiz
               </IonButton>
 
@@ -125,7 +125,7 @@ const Home: React.FC = () => {
                 <IonButton
                   className="home-button"
                   color="secondary"
-                  onClick={() => history.push("/signup")}
+                  onClick={() => ionRouter.push("/signup")}
                 >
                   Sign Up
                 </IonButton>

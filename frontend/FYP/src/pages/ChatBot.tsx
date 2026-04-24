@@ -11,16 +11,16 @@ import {
     IonButton,
     IonIcon,
   IonToast,
+  useIonRouter,
 } from '@ionic/react';
 import React, {useState, useRef, useEffect} from "react";
-import { useHistory } from "react-router";
 import { ellipsisVertical } from "ionicons/icons";
 
 import './ChatBot.css';
 import "./PageTheme.css";
 
 const Home: React.FC = () => {
-  const history = useHistory();
+  const ionRouter = useIonRouter();
   const isSignedIn = Boolean(localStorage.getItem("token"));
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<{user: String; ai: string}[]>([]);
@@ -146,7 +146,7 @@ const Home: React.FC = () => {
           <IonButton
             slot="start"
             className="light-link-button"
-            fill="clear" size="large" onClick={() => history.push("/home")}> Home </IonButton>
+            fill="clear" size="large" onClick={() => ionRouter.push("/home")}> Home </IonButton>
           <IonTitle className="ion-text-center">Chat Bot</IonTitle>
         </IonToolbar>
       </IonHeader>

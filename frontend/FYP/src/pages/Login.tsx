@@ -11,14 +11,14 @@ import {
   IonText
 } from "@ionic/react";
 
-import { useHistory } from "react-router";
+import { useIonRouter } from "@ionic/react";
 import { useState } from "react";
 import "./PageTheme.css";
 
 const THEME_PREFERENCE_KEY = "themePreference";
 
 const Login: React.FC = () => {
-  const history = useHistory();
+  const ionRouter = useIonRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -45,7 +45,7 @@ const Login: React.FC = () => {
     localStorage.setItem("darkMode", String(isDarkMode));
     document.body.classList.toggle("dark-mode", isDarkMode);
 
-    history.replace("/home");
+    ionRouter.push("/home");
     window.location.reload();
   };
 
@@ -53,7 +53,7 @@ const Login: React.FC = () => {
     <IonPage className="light-page">
       <IonHeader>
         <IonToolbar className="light-toolbar">
-          <IonButton slot="start" className="light-link-button" fill="clear" size="large" onClick={() => history.push("/home")} >Home</IonButton>
+          <IonButton slot="start" className="light-link-button" fill="clear" size="large" onClick={() => ionRouter.push("/home")} >Home</IonButton>
           <IonTitle className="ion-text-center">Login</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -82,11 +82,11 @@ const Login: React.FC = () => {
           Login
         </IonButton>
 
-        <IonButton className="light-link-button" expand="block" fill="clear" onClick={() => history.push("/forgotpass")}>
+        <IonButton className="light-link-button" expand="block" fill="clear" onClick={() => ionRouter.push("/forgotpass")}>
           Forgot password?
         </IonButton>
 
-        <IonButton className="light-link-button" expand="block" fill="clear" onClick={() => history.push("/signup")}>
+        <IonButton className="light-link-button" expand="block" fill="clear" onClick={() => ionRouter.push("/signup")}>
           Don't have an account? Sign Up
         </IonButton>
       </IonContent>

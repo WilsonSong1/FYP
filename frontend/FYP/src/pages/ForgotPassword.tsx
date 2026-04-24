@@ -11,11 +11,11 @@ import {
   IonText,
 } from "@ionic/react";
 import { useState } from "react";
-import { useHistory } from "react-router";
+import { useIonRouter } from "@ionic/react";
 import "./PageTheme.css";
 
 const ForgotPassword: React.FC = () => {
-  const history = useHistory();
+  const ionRouter = useIonRouter();
   const [email, setEmail] = useState("");
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,13 +39,22 @@ const ForgotPassword: React.FC = () => {
 
     setInfo(data.message || "If that email exists, a code has been sent.");
 
-    history.push(`/resetpass?email=${encodeURIComponent(email)}`);
+    ionRouter.push(`/resetpass?email=${encodeURIComponent(email)}`);
   };
 
   return (
     <IonPage className="light-page">
       <IonHeader>
         <IonToolbar className="light-toolbar">
+          <IonButton
+            slot="start"
+            className="light-link-button"
+            fill="clear"
+            size="large"
+            onClick={() => ionRouter.push("/login")}
+          >
+            Back
+          </IonButton>
           <IonTitle>Forgot Password</IonTitle>
         </IonToolbar>
       </IonHeader>

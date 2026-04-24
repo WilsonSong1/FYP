@@ -10,14 +10,14 @@ import {
   IonLabel,
   IonToggle,
 } from "@ionic/react";
-import { useHistory } from "react-router";
+import { useIonRouter } from "@ionic/react";
 import { useEffect, useState } from "react";
 import "./PageTheme.css";
 
 const THEME_PREFERENCE_KEY = "themePreference";
 
 const Profile: React.FC = () => {
-  const history = useHistory();
+  const ionRouter = useIonRouter();
   const [username, setUsername] = useState("");
   const [darkMode, setDarkMode] = useState(false);
 
@@ -38,7 +38,7 @@ const Profile: React.FC = () => {
     localStorage.setItem("darkMode", "false");
     setDarkMode(false);
     applyTheme(false);
-    history.replace("/home");
+    ionRouter.push("/home");
     window.location.reload();
   };
 
@@ -54,7 +54,7 @@ const Profile: React.FC = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      history.push("/signup");
+      ionRouter.push("/signup");
       return;
     }
 
@@ -69,7 +69,7 @@ const Profile: React.FC = () => {
         if (!response.ok) {
           localStorage.removeItem("token");
           localStorage.removeItem("username");
-          history.push("/signup");
+          ionRouter.push("/signup");
           return;
         }
 
@@ -77,12 +77,12 @@ const Profile: React.FC = () => {
         setUsername(data.username);
         localStorage.setItem("username", data.username);
       } catch {
-        history.push("/signup");
+        ionRouter.push("/signup");
       }
     };
 
     loadProfile();
-  }, [history]);
+  }, [ionRouter]);
 
   return (
     <IonPage className="light-page">
@@ -93,7 +93,7 @@ const Profile: React.FC = () => {
             className="light-link-button"
             fill="clear"
             size="large"
-            onClick={() => history.push("/home")}
+            onClick={() => ionRouter.push("/home")}
           >
             Home
           </IonButton>
@@ -116,7 +116,7 @@ const Profile: React.FC = () => {
           />
         </IonItem>
 
-        <IonButton className="ion-margin-top" expand="block" onClick={() => history.push("/saved-texts")}>
+        <IonButton className="ion-margin-top" expand="block" onClick={() => ionRouter.push("/saved-texts")}>
           View Saved Texts
         </IonButton>
 

@@ -11,12 +11,12 @@ import {
   IonText
 } from "@ionic/react";
 
-import { useHistory } from "react-router";
+import { useIonRouter } from "@ionic/react";
 import { useState } from "react";
 import "./PageTheme.css";
 
 const Signup: React.FC = () => {
-  const history = useHistory();
+  const ionRouter = useIonRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,14 +36,14 @@ const Signup: React.FC = () => {
       return;
     }
 
-    history.push("/login");
+    ionRouter.push("/login");
   };
 
   return (
     <IonPage className="light-page">
       <IonHeader>
         <IonToolbar className="light-toolbar">
-          <IonButton slot="start" className="light-link-button" fill="clear" size="large" onClick={() => history.push("/home")} >Home</IonButton>
+          <IonButton slot="start" className="light-link-button" fill="clear" size="large" onClick={() => ionRouter.push("/home")} >Home</IonButton>
           <IonTitle className="ion-text-center">Sign Up</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -80,7 +80,7 @@ const Signup: React.FC = () => {
           Create Account
         </IonButton>
 
-        <IonButton className="light-link-button" expand="block" fill="clear" onClick={() => history.push("/login")} >
+        <IonButton className="light-link-button" expand="block" fill="clear" onClick={() => ionRouter.push("/login")} >
           Already have an account? Login
         </IonButton>
       </IonContent>

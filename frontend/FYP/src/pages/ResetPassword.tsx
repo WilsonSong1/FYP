@@ -11,11 +11,12 @@ import {
   IonText,
 } from "@ionic/react";
 import { useState } from "react";
-import { useHistory, useLocation } from "react-router";
+import { useLocation } from "react-router";
+import { useIonRouter } from "@ionic/react";
 import "./PageTheme.css";
 
 const ResetPassword: React.FC = () => {
-  const history = useHistory();
+  const ionRouter = useIonRouter();
   const location = useLocation();
 
   const params = new URLSearchParams(location.search);
@@ -56,7 +57,7 @@ const ResetPassword: React.FC = () => {
 
     setInfo(data.message || "Password updated successfully.");
     // Optionally redirect to login after success
-    setTimeout(() => history.push("/login"), 1500);
+    setTimeout(() => ionRouter.push("/login"), 1500);
   };
 
   return (

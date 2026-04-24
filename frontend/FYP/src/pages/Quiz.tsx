@@ -1,5 +1,5 @@
 import React from "react";
-import { useHistory } from "react-router";
+import { useIonRouter } from "@ionic/react";
 import {
   IonPage,
   IonHeader,
@@ -11,7 +11,7 @@ import {
 import "./PageTheme.css";
 
 const Quiz: React.FC = () => {
-  const history = useHistory();
+  const ionRouter = useIonRouter();
 
   return (
     <IonPage className="light-page">
@@ -22,7 +22,7 @@ const Quiz: React.FC = () => {
             className="light-link-button"
             fill="clear"
             size="large"
-            onClick={() => history.push("/home")}
+            onClick={() => ionRouter.push("/home")}
           >
             Home
           </IonButton>
@@ -33,14 +33,14 @@ const Quiz: React.FC = () => {
       <IonContent className="ion-padding light-content">
         <IonButton
           className="quiz-option-button"
-          onClick={() => history.push("/quiz/generate")}
+          onClick={() => ionRouter.push("/quiz/generate")}
         >
           Generate quiz
         </IonButton>
 
         <IonButton
           className="quiz-option-button ion-margin-top"
-          onClick={() => history.push("/quiz/image")}
+          onClick={() => ionRouter.push("/quiz/image")}
         >
           Generate quiz from image
         </IonButton>

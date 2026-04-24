@@ -11,9 +11,9 @@ import {
   IonSpinner,
   IonIcon,
   useIonViewWillEnter,
+  useIonRouter,
 } from "@ionic/react";
 import React, { useState } from "react";
-import { useHistory } from "react-router";
 import { trash, copy } from "ionicons/icons";
 import "./PageTheme.css";
 
@@ -26,7 +26,7 @@ interface SavedText {
 }
 
 const SavedTexts: React.FC = () => {
-  const history = useHistory();
+  const ionRouter = useIonRouter();
   const [savedTexts, setSavedTexts] = useState<SavedText[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -35,7 +35,7 @@ const SavedTexts: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        history.push("/signup");
+        ionRouter.push("/signup");
         return;
       }
 
@@ -113,7 +113,7 @@ const SavedTexts: React.FC = () => {
             className="light-link-button"
             fill="clear"
             size="large"
-            onClick={() => history.push("/profile")}
+            onClick={() => ionRouter.push("/profile")}
           >
             Back
           </IonButton>
