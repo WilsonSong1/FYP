@@ -88,6 +88,11 @@ const Home: React.FC = () => {
     <IonPage className="home-page">
       <IonHeader>
         <IonToolbar className="home-toolbar">
+          {isLoggedIn && (
+            <IonButton slot="start" fill="clear" onClick={() => ionRouter.push("/friends")}>
+              Friends
+            </IonButton>
+          )}
           <IonButton slot="end" fill="clear" onClick={handleProfileClick}>
             Profile
           </IonButton>

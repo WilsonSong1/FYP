@@ -13,6 +13,7 @@ import QuizGenerate from './pages/QuizGenerate'
 import QuizFromImage from './pages/QuizFromImage'
 import Profile from './pages/Profile'
 import SavedTexts from './pages/SavedTexts'
+import FriendsPage from './pages/FriendsPage'
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -98,6 +99,10 @@ const App: React.FC = () => {
 
           <Route exact path="/saved-texts">
             <SavedTexts />
+          </Route>
+
+          <Route exact path="/friends">
+            <FriendsPage />
           </Route>
 
           <Route exact path="/">
