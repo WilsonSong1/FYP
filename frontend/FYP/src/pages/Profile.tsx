@@ -116,6 +116,10 @@ const Profile: React.FC = () => {
           />
         </IonItem>
 
+        <IonButton className="ion-margin-top" expand="block" onClick={() => history.push("/saved-texts")}>
+          View Saved Texts
+        </IonButton>
+
         <IonButton className="ion-margin-top" expand="block" onClick={handleLogout}>
           Logout
         </IonButton>

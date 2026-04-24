@@ -369,3 +369,61 @@ async def save_text_to_profile(data: SaveTextRequest, username: str = Depends(ge
             status_code=500,
             detail=f"Error saving text: {str(e)}"
         )
+
+@app.get("/get-saved-texts")
+async def get_saved_texts(username: str = Depends(get_current_username)):
+    """
+    Retrieve all saved texts for the current user from MongoDB
+    """
+    try:
+        db = get_mongo_db()
+        users_collection = db["users"]
+        
+        saved_texts = list(users_collection.find({"username": username}))
+        
+        for text in saved_texts:
+            text["_id"] = str(text["_id"])
+            text["created_at"] = text["created_at"].isoformat()
+            text["updated_at"] = text["updated_at"].isoformat()
+        
+        return {
+            "saved_texts": saved_texts,
+            "count": len(saved_texts)
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving saved texts: {str(e)}"
+        )
+
+@app.delete("/delete-saved-text/{text_id}")
+async def delete_saved_text(text_id: str, username: str = Depends(get_current_username)):
+    """
+    Delete a saved text - only the owner can delete it
+    """
+    try:
+        from bson import ObjectId
+        db = get_mongo_db()
+        users_collection = db["users"]
+        
+        try:
+            object_id = ObjectId(text_id)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid text ID")
+        
+        result = users_collection.delete_one({
+            "_id": object_id,
+            "username": username
+        })
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Text not found or not authorized")
+        
+        return {"message": "Text deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting text: {str(e)}"
+        )
