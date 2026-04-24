@@ -113,7 +113,8 @@ const SavedTexts: React.FC = () => {
             className="light-link-button"
             fill="clear"
             size="large"
-            onClick={() => ionRouter.push("/profile")}
+            routerLink="/profile"
+            routerDirection="back"
           >
             Back
           </IonButton>

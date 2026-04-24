@@ -43,7 +43,16 @@ const Signup: React.FC = () => {
     <IonPage className="light-page">
       <IonHeader>
         <IonToolbar className="light-toolbar">
-          <IonButton slot="start" className="light-link-button" fill="clear" size="large" onClick={() => ionRouter.push("/home")} >Home</IonButton>
+          <IonButton
+            slot="start"
+            className="light-link-button"
+            fill="clear"
+            size="large"
+            routerLink="/home"
+            routerDirection="back"
+          >
+            Home
+          </IonButton>
           <IonTitle className="ion-text-center">Sign Up</IonTitle>
         </IonToolbar>
       </IonHeader>

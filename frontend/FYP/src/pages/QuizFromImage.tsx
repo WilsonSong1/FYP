@@ -1,6 +1,5 @@
 import React from "react";
 import { useState } from "react";
-import { useIonRouter } from "@ionic/react";
 import {
   IonPage,
   IonHeader,
@@ -20,7 +19,6 @@ interface AnalysisResult {
 }
 
 const QuizFromImage: React.FC = () => {
-  const ionRouter = useIonRouter();
   const [file, setFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -80,9 +78,10 @@ const QuizFromImage: React.FC = () => {
             className="light-link-button"
             fill="clear"
             size="large"
-            onClick={() => ionRouter.push("/home")}
+            routerLink="/quiz"
+            routerDirection="back"
           >
-            Home
+            Back
           </IonButton>
           <IonTitle className="ion-text-center">Generate Quiz From Image</IonTitle>
         </IonToolbar>

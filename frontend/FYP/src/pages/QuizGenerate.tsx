@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useIonRouter } from "@ionic/react";
 import {
   IonPage,
   IonHeader,
@@ -26,7 +25,6 @@ interface Question {
 }
 
 const QuizGenerate: React.FC = () => {
-  const ionRouter = useIonRouter();
   const [topic, setTopic] = useState("");
   const [level, setLevel] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -99,9 +97,10 @@ const QuizGenerate: React.FC = () => {
             className="light-link-button"
             fill="clear"
             size="large"
-            onClick={() => ionRouter.push("/home")}
+            routerLink="/quiz"
+            routerDirection="back"
           >
-            Home
+            Back
           </IonButton>
           <IonTitle className="ion-text-center">Generate Quiz</IonTitle>
         </IonToolbar>

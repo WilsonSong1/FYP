@@ -22,7 +22,8 @@ const Quiz: React.FC = () => {
             className="light-link-button"
             fill="clear"
             size="large"
-            onClick={() => ionRouter.push("/home")}
+            routerLink="/home"
+            routerDirection="back"
           >
             Home
           </IonButton>

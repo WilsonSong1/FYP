@@ -20,15 +20,6 @@ const ForgotPassword: React.FC = () => {
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleBack = () => {
-    if (ionRouter.canGoBack()) {
-      ionRouter.goBack();
-      return;
-    }
-
-    ionRouter.push("/login");
-  };
-
   const handleSubmit = async () => {
     setError(null);
     setInfo(null);
@@ -60,7 +51,8 @@ const ForgotPassword: React.FC = () => {
             className="light-link-button"
             fill="clear"
             size="large"
-            onClick={handleBack}
+            routerLink="/login"
+            routerDirection="back"
           >
             Back
           </IonButton>
