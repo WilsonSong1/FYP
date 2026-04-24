@@ -3,9 +3,16 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.so
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+*.egg-info/
+dist/
+build/
+eggs/
+.tox/
+*.egg
 
 # Virtual environments
 .venv/
@@ -14,6 +21,7 @@ env/
 ENV/
 backend/venv/
 backend/.venv/
+backend/vnev/
 
 # Environment files and secrets
 .env
@@ -28,9 +36,26 @@ node_modules/
 dist/
 coverage/
 .ionic/
+frontend/FYP/dist/
+frontend/FYP/node_modules/
+frontend/FYP/coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# OS and editor files
-.DS_Store
-Thumbs.db
+# IDE and Editor files
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+.env.local
+.env.*.local
+
+# Testing
+.nyc_output/
+cypress/screenshots/
+cypress/videos/
