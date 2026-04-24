@@ -10,8 +10,9 @@ import {
   IonText,
   IonSpinner,
   IonIcon,
+  useIonViewWillEnter,
 } from "@ionic/react";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router";
 import { trash, copy } from "ionicons/icons";
 import "./PageTheme.css";
@@ -30,41 +31,41 @@ const SavedTexts: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      history.push("/signup");
-      return;
-    }
-
-    const fetchSavedTexts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://127.0.0.1:8000/get-saved-texts", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch saved texts");
-        }
-
-        const data = await response.json();
-        setSavedTexts(data.saved_texts);
-        setError("");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error loading saved texts");
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const fetchSavedTexts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        history.push("/signup");
+        return;
       }
-    };
 
+      setLoading(true);
+      const response = await fetch("http://127.0.0.1:8000/get-saved-texts", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch saved texts");
+      }
+
+      const data = await response.json();
+      setSavedTexts(data.saved_texts);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error loading saved texts");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useIonViewWillEnter(() => {
     fetchSavedTexts();
-  }, [history]);
+  });
 
   const copyToClipboard = async (text: string) => {
     try {
