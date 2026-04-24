@@ -10,8 +10,11 @@ import {
   IonInput,
   IonList,
   IonText,
+  IonIcon,
+  IonPopover,
 } from "@ionic/react";
 import { useEffect, useState } from "react";
+import { ellipsisVertical } from "ionicons/icons";
 import "./PageTheme.css";
 
 type IncomingRequest = {
@@ -24,6 +27,8 @@ const FriendsPage: React.FC = () => {
   const [username, setUsername] = useState("");
   const [friends, setFriends] = useState<string[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
+  const [selectedFriend, setSelectedFriend] = useState<string | null>(null);
+  const [menuEvent, setMenuEvent] = useState<Event | undefined>(undefined);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -136,6 +141,43 @@ const FriendsPage: React.FC = () => {
     }
   };
 
+  const unfriend = async (friendUsername: string) => {
+    const token = getToken();
+    if (!token) {
+      setError("You need to log in first");
+      return;
+    }
+
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/friends/${encodeURIComponent(friendUsername)}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Could not unfriend user");
+      }
+
+      setMessage(data.message || "Unfriended successfully");
+      setSelectedFriend(null);
+      setMenuEvent(undefined);
+      await loadFriendsData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not unfriend user");
+    }
+  };
+
+  const openFriendMenu = (event: React.MouseEvent, friend: string) => {
+    setSelectedFriend(friend);
+    setMenuEvent(event.nativeEvent);
+  };
+
   return (
     <IonPage className="light-page">
       <IonHeader>
@@ -206,10 +248,36 @@ const FriendsPage: React.FC = () => {
             {friends.map((friend) => (
               <IonItem key={friend} className="light-item">
                 <IonLabel>{friend}</IonLabel>
+                <IonButton
+                  slot="end"
+                  fill="clear"
+                  onClick={(event) => openFriendMenu(event, friend)}
+                >
+                  <IonIcon icon={ellipsisVertical} />
+                </IonButton>
               </IonItem>
             ))}
           </IonList>
         )}
+
+        <IonPopover
+          isOpen={!!menuEvent}
+          event={menuEvent}
+          onDidDismiss={() => {
+            setMenuEvent(undefined);
+            setSelectedFriend(null);
+          }}
+        >
+          <IonList>
+            <IonItem
+              button
+              detail={false}
+              onClick={() => selectedFriend && unfriend(selectedFriend)}
+            >
+              <IonLabel color="danger">Unfriend</IonLabel>
+            </IonItem>
+          </IonList>
+        </IonPopover>
       </IonContent>
     </IonPage>
   );

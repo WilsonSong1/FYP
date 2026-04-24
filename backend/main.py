@@ -559,3 +559,43 @@ def get_friends_list(username: str = Depends(get_current_username), db: Session 
             friend_usernames.append(friend.username)
 
     return {"friends": friend_usernames}
+
+
+@app.delete("/friends/{friend_username}")
+def unfriend_user(friend_username: str, username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    current_user = db.query(models.User).filter(models.User.username == username).first()
+    friend_user = db.query(models.User).filter(models.User.username == friend_username).first()
+
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Invalid user")
+
+    if not friend_user:
+        raise HTTPException(status_code=404, detail="Friend username does not exist")
+
+    user_one_id = min(current_user.id, friend_user.id)
+    user_two_id = max(current_user.id, friend_user.id)
+
+    friendship = db.query(models.Friendship).filter(
+        models.Friendship.user_one_id == user_one_id,
+        models.Friendship.user_two_id == user_two_id,
+    ).first()
+
+    if not friendship:
+        raise HTTPException(status_code=404, detail="Friend not found")
+
+    db.delete(friendship)
+
+    db.query(models.FriendRequest).filter(
+        (
+            (models.FriendRequest.from_user_id == current_user.id) &
+            (models.FriendRequest.to_user_id == friend_user.id)
+        ) |
+        (
+            (models.FriendRequest.from_user_id == friend_user.id) &
+            (models.FriendRequest.to_user_id == current_user.id)
+        )
+    ).delete(synchronize_session=False)
+
+    db.commit()
+
+    return {"message": "Successfully unfriended"}
