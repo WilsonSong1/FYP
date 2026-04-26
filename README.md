@@ -20,6 +20,9 @@ Core capabilities include:
 
 Backend services are implemented with FastAPI and SQLAlchemy, while the frontend is an Ionic React app. AI responses are generated through OpenRouter.
 
+### Screencast
+https://www.youtube.com/watch?v=FTTCRQ4qoIM
+
 ---
 
 ## Tech Stack
