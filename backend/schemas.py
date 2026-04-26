@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 class UserCreate(BaseModel):
     username: str
@@ -40,6 +40,24 @@ class QuizResponse(BaseModel):
 
 class SaveTextRequest(BaseModel):
     text: str
+
+
+class QuizAnswerResult(BaseModel):
+    question: str
+    selected_answer_key: str
+    selected_answer_text: str
+    correct_answer_key: str
+    correct_answer_text: str
+    is_correct: bool
+    wrong_answer: Optional[str] = None
+
+
+class QuizResultRequest(BaseModel):
+    topic: str
+    level: str
+    score: int
+    total_questions: int
+    questions: List[QuizAnswerResult]
 
 
 class FriendRequestCreate(BaseModel):

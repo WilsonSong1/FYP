@@ -9,6 +9,8 @@ import {
   IonItem,
   IonLabel,
   IonToggle,
+  IonCard,
+  IonCardContent,
 } from "@ionic/react";
 import { useIonRouter } from "@ionic/react";
 import { useEffect, useState } from "react";
@@ -22,6 +24,9 @@ const Profile: React.FC = () => {
   const [username, setUsername] = useState("");
   // Dark mode toggle state.
   const [darkMode, setDarkMode] = useState(false);
+  // Quiz performance summary.
+  const [quizAverage, setQuizAverage] = useState<number | null>(null);
+  const [quizCount, setQuizCount] = useState(0);
 
   const applyTheme = (enabled: boolean) => {
     // Add or remove dark-mode class on body.
@@ -84,6 +89,31 @@ const Profile: React.FC = () => {
         const data = await response.json();
         setUsername(data.username);
         localStorage.setItem("username", data.username);
+
+        const quizResultsResponse = await fetch("http://127.0.0.1:8000/get-quiz-results", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (quizResultsResponse.ok) {
+          const quizResultsData = await quizResultsResponse.json();
+          setQuizCount(quizResultsData.count || 0);
+
+          const totalScore = quizResultsData.quiz_results.reduce(
+            (sum: number, result: { score: number }) => sum + (result.score || 0),
+            0
+          );
+          const totalQuestions = quizResultsData.quiz_results.reduce(
+            (sum: number, result: { total_questions: number }) => sum + (result.total_questions || 0),
+            0
+          );
+
+          setQuizAverage(totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : null);
+        } else {
+          setQuizAverage(null);
+          setQuizCount(0);
+        }
       } catch {
         // If request fails, go to signup.
         ionRouter.push("/signup");
@@ -126,8 +156,30 @@ const Profile: React.FC = () => {
           />
         </IonItem>
 
+        <IonCard className="saved-text-card">
+          <IonCardContent>
+            <IonText>
+              <h2 style={{ marginTop: 0 }}>Quiz Performance</h2>
+              {quizAverage === null ? (
+                <p>No quiz results yet.</p>
+              ) : (
+                <>
+                  <p style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "8px" }}>
+                    Average result: {quizAverage.toFixed(1)}%
+                  </p>
+                  <p style={{ margin: 0 }}>Based on {quizCount} saved quiz result{quizCount === 1 ? "" : "s"}.</p>
+                </>
+              )}
+            </IonText>
+          </IonCardContent>
+        </IonCard>
+
         <IonButton className="ion-margin-top" expand="block" onClick={() => ionRouter.push("/saved-texts")}>
           View Saved Texts
+        </IonButton>
+
+        <IonButton className="ion-margin-top" expand="block" onClick={() => ionRouter.push("/quiz-results")}>
+          View Past Quiz Results
         </IonButton>
 
         <IonButton className="ion-margin-top" expand="block" onClick={handleLogout}>

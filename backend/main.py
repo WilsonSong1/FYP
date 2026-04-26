@@ -8,7 +8,7 @@ from openai import OpenAI
 from datetime import datetime, timedelta
 from database import SessionLocal, engine
 from mongodb import connect_to_mongo, close_mongo_connection, get_mongo_db
-from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest, QuizRequest, QuizResponse, SaveTextRequest, FriendRequestCreate
+from schemas import UserCreate, UserLogin, ForgotPasswordRequest, ResetPasswordRequest, QuizRequest, QuizResponse, SaveTextRequest, QuizResultRequest, FriendRequestCreate
 from auth import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 from emailUtil import  send_reset_code_email
 import random
@@ -46,7 +46,7 @@ app.add_middleware(
 )
 
 apiKey = os.getenv("AIKEY")
-ai_model = "google/gemma-4-26b-a4b-it:free"
+ai_model = "deepseek/deepseek-v4-pro"
 print("Loaded API KEY:" , bool(apiKey))
 
 models.Base.metadata.create_all(bind=engine)
@@ -438,6 +438,104 @@ async def delete_saved_text(text_id: str, username: str = Depends(get_current_us
         raise HTTPException(
             status_code=500,
             detail=f"Error deleting text: {str(e)}"
+        )
+
+
+@app.post("/save-quiz-result-to-profile")
+async def save_quiz_result_to_profile(data: QuizResultRequest, username: str = Depends(get_current_username)):
+    """
+    Save a completed quiz result to the current user's profile in MongoDB.
+    """
+    try:
+        db = get_mongo_db()
+        quiz_results_collection = db["quiz_results"]
+
+        quiz_result_doc = {
+            "username": username,
+            "topic": data.topic,
+            "level": data.level,
+            "score": data.score,
+            "total_questions": data.total_questions,
+            "questions": [question.dict() for question in data.questions],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        }
+
+        result = quiz_results_collection.insert_one(quiz_result_doc)
+
+        return {
+            "message": "Quiz result saved successfully",
+            "quiz_result_id": str(result.inserted_id),
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error saving quiz result: {str(e)}",
+        )
+
+
+@app.get("/get-quiz-results")
+async def get_quiz_results(username: str = Depends(get_current_username)):
+    """
+    Retrieve all quiz results for the current user from MongoDB.
+    """
+    try:
+        db = get_mongo_db()
+        quiz_results_collection = db["quiz_results"]
+
+        quiz_results = list(
+            quiz_results_collection.find({"username": username}).sort("created_at", -1)
+        )
+
+        for quiz_result in quiz_results:
+            quiz_result["_id"] = str(quiz_result["_id"])
+            if quiz_result.get("created_at"):
+                quiz_result["created_at"] = quiz_result["created_at"].isoformat()
+            if quiz_result.get("updated_at"):
+                quiz_result["updated_at"] = quiz_result["updated_at"].isoformat()
+
+        return {
+            "quiz_results": quiz_results,
+            "count": len(quiz_results),
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving quiz results: {str(e)}",
+        )
+
+
+@app.delete("/delete-quiz-result/{quiz_result_id}")
+async def delete_quiz_result(quiz_result_id: str, username: str = Depends(get_current_username)):
+    """
+    Delete a saved quiz result belonging to the current user.
+    """
+    try:
+        from bson import ObjectId
+
+        db = get_mongo_db()
+        quiz_results_collection = db["quiz_results"]
+
+        try:
+            object_id = ObjectId(quiz_result_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid quiz result ID")
+
+        result = quiz_results_collection.delete_one({
+            "_id": object_id,
+            "username": username,
+        })
+
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Quiz result not found or not authorized")
+
+        return {"message": "Quiz result deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting quiz result: {str(e)}",
         )
 
 
