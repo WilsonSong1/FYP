@@ -49,9 +49,14 @@ setupIonicReact();
 
 const App: React.FC = () => {
   useEffect(() => {
-    localStorage.setItem('darkMode', 'false');
-    localStorage.setItem('themePreference', 'light');
-    document.body.classList.remove('dark-mode');
+    const savedThemePreference = localStorage.getItem('themePreference');
+    const savedDarkMode =
+      savedThemePreference === 'dark' ||
+      (savedThemePreference === null && localStorage.getItem('darkMode') === 'true');
+
+    localStorage.setItem('darkMode', String(savedDarkMode));
+    localStorage.setItem('themePreference', savedDarkMode ? 'dark' : 'light');
+    document.body.classList.toggle('dark-mode', savedDarkMode);
   }, []);
 
   return (
