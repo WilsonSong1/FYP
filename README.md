@@ -81,6 +81,86 @@ FYP/
 
 ---
 
+## Setup Instructions
+
+### Prerequisites
+
+Install the following before running the project:
+
+* Python 3.10+
+* Node.js 18+ and npm
+* PostgreSQL (running locally or remotely)
+* MongoDB (running locally or remotely)
+
+---
+
+### 1. Backend Setup (FastAPI)
+
+From the project root:
+
+```
+cd backend
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install fastapi "uvicorn[standard]" sqlalchemy psycopg2-binary pymongo python-dotenv passlib bcrypt python-jose openai pymupdf pytest
+```
+
+Create or update `backend/.env` with your values:
+
+```
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/fyp
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB_NAME=fyp
+
+AIKEY=your_openrouter_api_key
+
+SECRET_KEY=your_long_random_secret_key
+
+SMTP_HOST=smtp.example.com
+SMTP_PORT=465
+SMTP_USER=your_email@example.com
+SMTP_PASSWORD=your_email_password_or_app_password
+FROM_EMAIL=your_email@example.com
+```
+
+Run the backend server:
+
+```
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Backend will be available at:
+
+* API base URL: `http://127.0.0.1:8000`
+* Interactive docs: `http://127.0.0.1:8000/docs`
+
+---
+
+### 2. Frontend Setup (Ionic React + Vite)
+
+Open a new terminal, then run:
+
+```
+cd frontend/FYP
+npm install
+npm run dev
+```
+
+Vite will print a local URL (usually `http://localhost:5173`). Open it in your browser.
+
+Note: the frontend currently calls backend endpoints on `http://127.0.0.1:8000`, so keep the backend running while using the app.
+
+---
+
+### 3. Running Both Services Together
+
+Use two terminals:
+
+1. Terminal A: run FastAPI in `backend/`
+2. Terminal B: run Vite in `frontend/FYP/`
+
+---
+
 ## Features Implemented
 
 ### Authentication
