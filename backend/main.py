@@ -539,6 +539,61 @@ async def delete_quiz_result(quiz_result_id: str, username: str = Depends(get_cu
         )
 
 
+@app.get("/quiz-leaderboard")
+def get_quiz_leaderboard(db: Session = Depends(get_db)):
+    """
+    Return all users ranked by average quiz result percentage.
+    Users with no quiz results are included with an average of 0.
+    """
+    try:
+        db_mongo = get_mongo_db()
+        quiz_results_collection = db_mongo["quiz_results"]
+
+        quiz_results = list(quiz_results_collection.find({}))
+        users = db.query(models.User).all()
+
+        aggregates = {}
+        for result in quiz_results:
+            username = result.get("username")
+            if not username:
+                continue
+
+            score = result.get("score", 0) or 0
+            total_questions = result.get("total_questions", 0) or 0
+
+            if username not in aggregates:
+                aggregates[username] = {"score_sum": 0, "question_sum": 0, "quiz_count": 0}
+
+            aggregates[username]["score_sum"] += score
+            aggregates[username]["question_sum"] += total_questions
+            aggregates[username]["quiz_count"] += 1
+
+        leaderboard = []
+        for user in users:
+            user_aggregate = aggregates.get(user.username, {"score_sum": 0, "question_sum": 0, "quiz_count": 0})
+            average_score = 0
+            if user_aggregate["question_sum"] > 0:
+                average_score = (user_aggregate["score_sum"] / user_aggregate["question_sum"]) * 100
+
+            leaderboard.append({
+                "username": user.username,
+                "average_score": round(average_score, 1),
+                "quiz_count": user_aggregate["quiz_count"],
+            })
+
+        leaderboard.sort(key=lambda item: (-item["average_score"], item["username"].lower()))
+
+        return {
+            "leaderboard": leaderboard,
+            "count": len(leaderboard),
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving quiz leaderboard: {str(e)}",
+        )
+
+
 @app.post("/friends/request")
 def send_friend_request(payload: FriendRequestCreate, username: str = Depends(get_current_username), db: Session = Depends(get_db)):
     # Get current user and target user.

@@ -12,6 +12,8 @@ import {
   IonText,
   IonIcon,
   IonPopover,
+  IonCard,
+  IonCardContent,
 } from "@ionic/react";
 import { useEffect, useState } from "react";
 import { ellipsisVertical } from "ionicons/icons";
@@ -23,6 +25,12 @@ type IncomingRequest = {
   created_at?: string | null;
 };
 
+type LeaderboardEntry = {
+  username: string;
+  average_score: number;
+  quiz_count: number;
+};
+
 const FriendsPage: React.FC = () => {
   // Username typed in the add-friend box.
   const [username, setUsername] = useState("");
@@ -30,6 +38,8 @@ const FriendsPage: React.FC = () => {
   const [friends, setFriends] = useState<string[]>([]);
   // List of pending incoming requests.
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
+  // Global leaderboard based on quiz averages.
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   // Friend currently selected in the menu.
   const [selectedFriend, setSelectedFriend] = useState<string | null>(null);
   // Click event used to place the popover menu.
@@ -52,17 +62,21 @@ const FriendsPage: React.FC = () => {
 
     try {
       // Request both endpoints at the same time.
-      const [friendsResponse, requestsResponse] = await Promise.all([
+      const [friendsResponse, requestsResponse, leaderboardResponse] = await Promise.all([
         fetch("http://127.0.0.1:8000/friends/list", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch("http://127.0.0.1:8000/friends/requests", {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetch("http://127.0.0.1:8000/quiz-leaderboard", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const friendsData = await friendsResponse.json();
       const requestsData = await requestsResponse.json();
+      const leaderboardData = await leaderboardResponse.json();
 
       if (!friendsResponse.ok) {
         throw new Error(friendsData.detail || "Failed to load friends list");
@@ -72,8 +86,13 @@ const FriendsPage: React.FC = () => {
         throw new Error(requestsData.detail || "Failed to load friend requests");
       }
 
+      if (!leaderboardResponse.ok) {
+        throw new Error(leaderboardData.detail || "Failed to load leaderboard");
+      }
+
       setFriends(friendsData.friends || []);
       setIncomingRequests(requestsData.requests || []);
+      setLeaderboard(leaderboardData.leaderboard || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load friends data");
     }
@@ -275,6 +294,29 @@ const FriendsPage: React.FC = () => {
               </IonItem>
             ))}
           </IonList>
+        )}
+
+        <h3>Leaderboard</h3>
+        {leaderboard.length === 0 ? (
+          <p>No quiz results yet</p>
+        ) : (
+          <IonCard className="saved-text-card">
+            <IonCardContent>
+              <IonList>
+                {leaderboard.map((entry, index) => (
+                  <IonItem key={entry.username} className="light-item">
+                    <IonLabel>
+                      <h2>
+                        {index + 1}. {entry.username}
+                      </h2>
+                      <p>Average result: {entry.average_score.toFixed(1)}%</p>
+                      <p>Quizzes done: {entry.quiz_count}</p>
+                    </IonLabel>
+                  </IonItem>
+                ))}
+              </IonList>
+            </IonCardContent>
+          </IonCard>
         )}
 
         <IonPopover
