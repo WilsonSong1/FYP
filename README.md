@@ -1,22 +1,24 @@
- AI Tutoring Application
+AI Tutoring Application
 
-**FastAPI · Ionic React · PostgreSQL · MongoDB Atlas · OpenRouter AI**
+**FastAPI · Ionic React · PostgreSQL · MongoDB · OpenRouter AI**
 
 ---
 
 ## Project Overview
 
-This project is a **full-stack AI tutoring application** built for my Final Year Project.
-It allows users to:
+This project is a full-stack AI tutoring application built for a Final Year Project.
 
-* Create an account (sign up)
-* Log in securely
-* Reset their password via email verification
-* Chat with an AI tutor
-* Store user credentials securely in a PostgreSQL database
+Core capabilities include:
 
-The backend is built using **FastAPI**, while the frontend is built using **Ionic React**.
-The AI functionality is powered via **OpenRouter (DeepSeek models)**.
+* account registration and login
+* password reset via email code verification
+* AI tutoring chat
+* quiz generation by topic and level
+* extracting and summarizing text from uploaded files
+* saving AI-generated text to user profiles
+* basic social features (friend requests and friends list)
+
+Backend services are implemented with FastAPI and SQLAlchemy, while the frontend is an Ionic React app. AI responses are generated through OpenRouter.
 
 ---
 
@@ -24,13 +26,14 @@ The AI functionality is powered via **OpenRouter (DeepSeek models)**.
 
 ### Backend
 
-* **FastAPI** – REST API
-* **PostgreSQL** – Database
-* **SQLAlchemy** – ORM
-* **Passlib + bcrypt** – Password hashing
-* **JWT (python-jose)** – Authentication
-* **OpenRouter API** – AI responses
-* **SMTP (Gmail)** – Password reset emails
+* FastAPI (REST API)
+* SQLAlchemy + PostgreSQL (relational data)
+* PyMongo + MongoDB (saved text documents)
+* Passlib + bcrypt (password hashing)
+* python-jose (JWT authentication)
+* OpenAI SDK with OpenRouter endpoint (AI responses)
+* PyMuPDF (file text extraction)
+* SMTP (password reset email delivery)
 
 ### Frontend
 
@@ -45,28 +48,35 @@ The AI functionality is powered via **OpenRouter (DeepSeek models)**.
 
 ```
 FYP/
-│
 ├── backend/
 │   ├── main.py
 │   ├── database.py
+│   ├── mongodb.py
 │   ├── models.py
-│   ├── auth.py
 │   ├── schemas.py
-│   ├── email_utils.py
-│   ├── .env
-│   └── venv/
+│   ├── auth.py
+│   ├── emailUtil.py
+│   └── tests/
+│       └── test.py
 │
 └── frontend/
-    ├── src/
-    │   ├── pages/
-    │   │   ├── Home.tsx
-    │   │   ├── Login.tsx
-    │   │   ├── Signup.tsx
-    │   │   ├── ForgotPassword.tsx
-    │   │   └── ResetPassword.tsx
-    │   ├── App.tsx
-    │   └── Home.css
-    └── package.json
+  └── FYP/
+    ├── package.json
+    └── src/
+      ├── App.tsx
+      └── pages/
+        ├── Home.tsx
+        ├── Login.tsx
+        ├── Signup.tsx
+        ├── ForgotPassword.tsx
+        ├── ResetPassword.tsx
+        ├── ChatBot.tsx
+        ├── Quiz.tsx
+        ├── QuizGenerate.tsx
+        ├── QuizFromImage.tsx
+        ├── SavedTexts.tsx
+        ├── Profile.tsx
+        └── FriendsPage.tsx
 ```
 
 ---
@@ -75,68 +85,56 @@ FYP/
 
 ### Authentication
 
-* User signup with hashed passwords
-* Secure login with JWT tokens
-* Password reset via email with 6-digit verification code
-* Password expiration and validation
+* user signup with duplicate username/email checks
+* secure login with JWT bearer token generation
+* protected profile identity endpoint (`/me`)
+* forgot-password email workflow with 6-digit code and expiry
 
-### AI Chat
+### AI Learning Tools
 
-* User-to-AI chat interface
-* Messages sent to FastAPI backend
-* AI responses generated via OpenRouter (DeepSeek)
-* Chat displayed in a messenger-style UI
+* tutoring chat endpoint (`/chat`)
+* quiz generation endpoint (`/generate-quiz`) returning structured MCQs
+* upload-based text extraction and AI summarization (`/extract-text-from-image`)
 
-### Database
+### Saved Texts
 
-* PostgreSQL used for:
+* save AI-generated text to MongoDB (`/save-text-to-profile`)
+* fetch saved texts by logged-in user (`/get-saved-texts`)
+* delete saved text by id with ownership checks (`/delete-saved-text/{text_id}`)
 
-  * User credentials
-  * Password reset codes
-* Secure storage (no plaintext passwords)
+### Friends System
 
----
-
-##  How to Run the Project
-
-### 1 Backend Setup
-
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-pip install pymongo
-uvicorn main:app --reload
-```
-
-Add these environment variables in `backend/.env`:
-
-```env
-MONGODB_URI=mongodb://localhost:27017
-MONGODB_DB_NAME=fyp
-```
-
-Backend will run at:
-
-```
-http://127.0.0.1:8000
-```
+* send friend requests
+* view incoming friend requests
+* accept pending friend requests
+* list friends
+* unfriend existing friends
 
 ---
 
-### 2 Frontend Setup
+## Data Storage
 
-```bash
-cd frontend
-npm install
-ionic serve
-```
+### PostgreSQL
 
-Frontend will run at:
+* users
+* friend_requests
+* friendships
 
-```
-http://localhost:8100
-```
+### MongoDB
+
+* saved profile texts (stored in `users` collection with username linkage)
 
 ---
+
+## Testing
+
+Current backend tests (`backend/tests/test.py`) cover:
+
+* login error handling
+* payload validation behavior
+* base endpoint responses
+
+Frontend repository also includes unit and e2e test tooling (Vitest and Cypress).
+
+---
+
