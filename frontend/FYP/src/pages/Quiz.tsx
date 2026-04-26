@@ -11,6 +11,7 @@ import {
 import "./PageTheme.css";
 
 const Quiz: React.FC = () => {
+  // Used to move to other quiz pages.
   const ionRouter = useIonRouter();
 
   return (
@@ -34,6 +35,7 @@ const Quiz: React.FC = () => {
       <IonContent className="ion-padding light-content">
         <IonButton
           className="quiz-option-button"
+          // Open the text-based quiz generator.
           onClick={() => ionRouter.push("/quiz/generate")}
         >
           Generate quiz
@@ -41,6 +43,7 @@ const Quiz: React.FC = () => {
 
         <IonButton
           className="quiz-option-button ion-margin-top"
+          // Open the image-based quiz generator.
           onClick={() => ionRouter.push("/quiz/image")}
         >
           Generate quiz from image

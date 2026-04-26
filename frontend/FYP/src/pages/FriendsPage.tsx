@@ -24,17 +24,26 @@ type IncomingRequest = {
 };
 
 const FriendsPage: React.FC = () => {
+  // Username typed in the add-friend box.
   const [username, setUsername] = useState("");
+  // List of current friends.
   const [friends, setFriends] = useState<string[]>([]);
+  // List of pending incoming requests.
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
+  // Friend currently selected in the menu.
   const [selectedFriend, setSelectedFriend] = useState<string | null>(null);
+  // Click event used to place the popover menu.
   const [menuEvent, setMenuEvent] = useState<Event | undefined>(undefined);
+  // Error text shown on the page.
   const [error, setError] = useState("");
+  // Success text shown on the page.
   const [message, setMessage] = useState("");
 
+  // Read auth token from local storage.
   const getToken = () => localStorage.getItem("token");
 
   const loadFriendsData = async () => {
+    // Load friends list and incoming requests.
     const token = getToken();
     if (!token) {
       setError("You need to log in first");
@@ -42,6 +51,7 @@ const FriendsPage: React.FC = () => {
     }
 
     try {
+      // Request both endpoints at the same time.
       const [friendsResponse, requestsResponse] = await Promise.all([
         fetch("http://127.0.0.1:8000/friends/list", {
           headers: { Authorization: `Bearer ${token}` },
@@ -70,10 +80,12 @@ const FriendsPage: React.FC = () => {
   };
 
   useEffect(() => {
+    // Load data when page opens.
     loadFriendsData();
   }, []);
 
   const sendFriendRequest = async () => {
+    // Send a friend request to typed username.
     const token = getToken();
     if (!token) {
       setError("You need to log in first");
@@ -112,6 +124,7 @@ const FriendsPage: React.FC = () => {
   };
 
   const acceptFriendRequest = async (requestId: number) => {
+    // Accept one incoming request by id.
     const token = getToken();
     if (!token) {
       setError("You need to log in first");
@@ -135,6 +148,7 @@ const FriendsPage: React.FC = () => {
       }
 
       setMessage(data.message || "Friend request accepted");
+      // Reload lists after accepting request.
       await loadFriendsData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not accept friend request");
@@ -142,6 +156,7 @@ const FriendsPage: React.FC = () => {
   };
 
   const unfriend = async (friendUsername: string) => {
+    // Remove selected friend from friends list.
     const token = getToken();
     if (!token) {
       setError("You need to log in first");
@@ -167,6 +182,7 @@ const FriendsPage: React.FC = () => {
       setMessage(data.message || "Unfriended successfully");
       setSelectedFriend(null);
       setMenuEvent(undefined);
+      // Reload lists after removing friend.
       await loadFriendsData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not unfriend user");
@@ -174,6 +190,7 @@ const FriendsPage: React.FC = () => {
   };
 
   const openFriendMenu = (event: React.MouseEvent, friend: string) => {
+    // Open menu for the clicked friend row.
     setSelectedFriend(friend);
     setMenuEvent(event.nativeEvent);
   };

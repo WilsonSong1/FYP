@@ -16,10 +16,12 @@ import "./Home.css";
 
 const Home: React.FC = () => {
   const ionRouter = useIonRouter();
+  // Track if user is logged in.
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
+      // Read token from local storage.
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -28,6 +30,7 @@ const Home: React.FC = () => {
       }
 
       try {
+        // Check token with backend /me endpoint.
         const response = await fetch("http://127.0.0.1:8000/me", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -53,6 +56,7 @@ const Home: React.FC = () => {
   }, []);
 
   const handleProfileClick = async () => {
+    // If no token, send user to signup page.
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -61,6 +65,7 @@ const Home: React.FC = () => {
     }
 
     try {
+      // Re-check token before opening profile.
       const response = await fetch("http://127.0.0.1:8000/me", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -81,6 +86,7 @@ const Home: React.FC = () => {
       return;
     }
 
+    // Token is valid, open profile page.
     ionRouter.push("/profile");
   };
 
@@ -89,6 +95,7 @@ const Home: React.FC = () => {
       <IonHeader>
         <IonToolbar className="home-toolbar">
           {isLoggedIn && (
+            // Show friends button only for logged-in users.
             <IonButton slot="start" fill="clear" onClick={() => ionRouter.push("/friends")}>
               Friends
             </IonButton>
@@ -113,6 +120,7 @@ const Home: React.FC = () => {
           <IonRow className="home-buttons-row ion-justify-content-center">
             <IonCol size="12" sizeMd="6" className="home-buttons-col">
               {!isLoggedIn && (
+                // Show login/signup only when logged out.
                 <IonButton className="home-button" onClick={() => ionRouter.push("/login")}>
                   Login
                 </IonButton>

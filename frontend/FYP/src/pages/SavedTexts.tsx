@@ -27,12 +27,15 @@ interface SavedText {
 
 const SavedTexts: React.FC = () => {
   const ionRouter = useIonRouter();
+  // Saved text list from backend.
   const [savedTexts, setSavedTexts] = useState<SavedText[]>([]);
+  // Loading and error states.
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchSavedTexts = async () => {
     try {
+      // Require login token to view saved texts.
       const token = localStorage.getItem("token");
       if (!token) {
         ionRouter.push("/signup");
@@ -40,6 +43,7 @@ const SavedTexts: React.FC = () => {
       }
 
       setLoading(true);
+  // Get saved texts for current user.
       const response = await fetch("http://127.0.0.1:8000/get-saved-texts", {
         method: "GET",
         headers: {
@@ -64,11 +68,13 @@ const SavedTexts: React.FC = () => {
   };
 
   useIonViewWillEnter(() => {
+    // Refresh data each time page is opened.
     fetchSavedTexts();
   });
 
   const copyToClipboard = async (text: string) => {
     try {
+      // Copy selected saved text.
       await navigator.clipboard.writeText(text);
       alert("Text copied to clipboard!");
     } catch (err) {
@@ -77,9 +83,11 @@ const SavedTexts: React.FC = () => {
   };
 
   const deleteText = async (id: string) => {
+    // Ask user before deleting text.
     if (window.confirm("Are you sure you want to delete this text?")) {
       try {
         const token = localStorage.getItem("token");
+        // Delete selected text by id.
         const response = await fetch(`http://127.0.0.1:8000/delete-saved-text/${id}`, {
           method: "DELETE",
           headers: {
@@ -100,6 +108,7 @@ const SavedTexts: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
+    // Convert ISO date to local date/time string.
     const date = new Date(dateString);
     return date.toLocaleString();
   };

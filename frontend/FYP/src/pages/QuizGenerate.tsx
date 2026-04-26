@@ -25,18 +25,25 @@ interface Question {
 }
 
 const QuizGenerate: React.FC = () => {
+  // Topic and level chosen by user.
   const [topic, setTopic] = useState("");
   const [level, setLevel] = useState("");
+  // Quiz questions from backend.
   const [questions, setQuestions] = useState<Question[]>([]);
+  // User answers keyed by question index.
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+  // True after quiz is submitted.
   const [submitted, setSubmitted] = useState(false);
+  // Final score and per-question results.
   const [score, setScore] = useState(0);
   const [results, setResults] = useState<
     { correct: boolean; userAnswer: string; correctAnswer: string }[]
   >([]);
+  // Loading state while quiz is being generated.
   const [loading, setLoading] = useState(false);
 
   const generateQuiz = async () => {
+    // Ask backend to create quiz questions.
     setLoading(true);
     try {
       const res = await fetch("http://127.0.0.1:8000/generate-quiz", {
@@ -56,11 +63,13 @@ const QuizGenerate: React.FC = () => {
   };
 
   const submitQuiz = () => {
+    // Make sure all questions are answered.
     if (Object.keys(answers).length !== questions.length) {
       alert("Please answer all questions before submitting!");
       return;
     }
 
+    // Check each answer and build result list.
     let correctCount = 0;
     const quizResults = questions.map((q, i) => {
       const userAnswer = answers[i];
@@ -79,6 +88,7 @@ const QuizGenerate: React.FC = () => {
   };
 
   const resetQuiz = () => {
+    // Reset page to start a new quiz.
     setTopic("");
     setLevel("");
     setQuestions([]);

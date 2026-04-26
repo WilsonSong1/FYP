@@ -16,14 +16,19 @@ import "./PageTheme.css";
 
 const ForgotPassword: React.FC = () => {
   const ionRouter = useIonRouter();
+  // Email entered by the user.
   const [email, setEmail] = useState("");
+  // Success message from the API.
   const [info, setInfo] = useState<string | null>(null);
+  // Error message to show on screen.
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
+    // Clear old messages before new request.
     setError(null);
     setInfo(null);
 
+    // Ask backend to send a reset code.
     const response = await fetch("http://127.0.0.1:8000/forgot-password/request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -33,10 +38,12 @@ const ForgotPassword: React.FC = () => {
     const data = await response.json();
 
     if (!response.ok) {
+      // Show backend error if request fails.
       setError(data.detail || "Something went wrong.");
       return;
     }
 
+    // Show success message and go to reset page.
     setInfo(data.message || "If that email exists, a code has been sent.");
 
     ionRouter.push(`/resetpass?email=${encodeURIComponent(email)}`);

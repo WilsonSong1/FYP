@@ -17,12 +17,15 @@ import "./PageTheme.css";
 
 const Signup: React.FC = () => {
   const ionRouter = useIonRouter();
+  // Form input values.
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Error message shown on fail.
   const [error, setError] = useState("");
 
   const registerUser = async () => {
+    // Send signup details to backend.
     const response = await fetch("http://127.0.0.1:8000/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -36,6 +39,7 @@ const Signup: React.FC = () => {
       return;
     }
 
+    // Go to login after successful signup.
     ionRouter.push("/login");
   };
 

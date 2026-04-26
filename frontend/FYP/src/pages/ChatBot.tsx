@@ -19,6 +19,7 @@ import './ChatBot.css';
 import "./PageTheme.css";
 
 const Home: React.FC = () => {
+  // See if a user token exists.
   const isSignedIn = Boolean(localStorage.getItem("token"));
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<{user: String; ai: string}[]>([]);
@@ -31,12 +32,14 @@ const Home: React.FC = () => {
 
 
   const openMessageMenu = (index: number, aiMessage: string) => {
+    // Open or close the menu for this message.
     setActiveMenuIndex((currentIndex) => (currentIndex === index ? null : index));
     setActiveMessage(aiMessage);
   };
 
   const copyMessage = async () => {
     try {
+      // Copy the selected AI message.
       await navigator.clipboard.writeText(activeMessage);
       setCopyToastOpen(true);
     } catch (error) {
@@ -48,6 +51,7 @@ const Home: React.FC = () => {
 
   const saveMessage = async () => {
     try {
+      // User must be signed in to save text.
       const token = localStorage.getItem("token");
       if (!token) {
         setSaveToastMessage("You must be signed in to save text");
@@ -65,6 +69,7 @@ const Home: React.FC = () => {
       });
 
       if (response.ok) {
+        // Show a success or fail message.
         setSaveToastMessage("Text saved to profile successfully!");
       } else {
         setSaveToastMessage("Failed to save text");
@@ -83,6 +88,7 @@ const Home: React.FC = () => {
     const handleDocumentClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
 
+      // Close the menu when clicking outside.
       if (!target.closest(".ai-bubble-wrapper")) {
         setActiveMenuIndex(null);
       }
@@ -96,15 +102,17 @@ const Home: React.FC = () => {
   }, []);
 
   const sendMessage = async() =>{
+    // Skip empty messages.
     if(!message.trim()) return;
 
   const userMessage = message;
   setMessage("");
 
-  //Place "..." while AI is generating response
+  // Place "..." while AI is generating response
   setChat((prev) => [...prev, {user: userMessage, ai: "..."}]);
 
   try{
+      // Send the message to the backend.
       const response = await fetch("http://127.0.0.1:8000/chat", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
@@ -113,7 +121,7 @@ const Home: React.FC = () => {
 
   const data = await response.json();
 
-  //Replace "..." with AI generated reply
+  // Replace "..." with AI generated reply
  setChat((prev) =>
   prev.map((entry, idx) =>
     idx === prev.length - 1
@@ -122,6 +130,7 @@ const Home: React.FC = () => {
     );
     } catch (err) {
       console.error(err);
+      // Show an error message if request fails.
       setChat((prev) =>
         prev.map((entry, idx) =>
           idx === prev.length - 1
@@ -132,7 +141,7 @@ const Home: React.FC = () => {
     }
   };
 
-  //Auto scroll
+  // Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth"});
   }, [chat]);

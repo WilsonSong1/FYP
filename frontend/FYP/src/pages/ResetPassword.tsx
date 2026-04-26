@@ -19,9 +19,11 @@ const ResetPassword: React.FC = () => {
   const ionRouter = useIonRouter();
   const location = useLocation();
 
+  // Read email from URL if available.
   const params = new URLSearchParams(location.search);
   const emailFromQuery = params.get("email") || "";
 
+  // Form fields and messages.
   const [email, setEmail] = useState(emailFromQuery);
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -30,14 +32,17 @@ const ResetPassword: React.FC = () => {
   const [info, setInfo] = useState<string | null>(null);
 
   const handleReset = async () => {
+    // Clear old messages before submit.
     setError(null);
     setInfo(null);
 
+    // Stop if passwords do not match.
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
+    // Send reset request to backend.
     const response = await fetch("http://127.0.0.1:8000/forgot-password/reset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

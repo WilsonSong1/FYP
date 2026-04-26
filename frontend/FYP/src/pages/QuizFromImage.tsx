@@ -19,12 +19,17 @@ interface AnalysisResult {
 }
 
 const QuizFromImage: React.FC = () => {
+  // File selected by the user.
   const [file, setFile] = useState<File | null>(null);
+  // Result returned from backend.
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  // Loading state while request runs.
   const [loading, setLoading] = useState(false);
+  // File name shown in the UI.
   const [fileName, setFileName] = useState<string>("");
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Save selected file and clear old result.
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
@@ -34,11 +39,13 @@ const QuizFromImage: React.FC = () => {
   };
 
   const handleExtractAndAnalyze = async () => {
+    // Stop if no file is selected.
     if (!file) {
       alert("Please select an image file first");
       return;
     }
 
+    // Send file to backend for analysis.
     setLoading(true);
     try {
       const formData = new FormData();
@@ -56,6 +63,7 @@ const QuizFromImage: React.FC = () => {
       const data = await res.json();
       setAnalysis(data);
     } catch (error) {
+      // Show simple error message on failure.
       console.error("Error processing image:", error);
       alert("Failed to process image");
     } finally {
@@ -64,6 +72,7 @@ const QuizFromImage: React.FC = () => {
   };
 
   const resetForm = () => {
+    // Reset page to initial state.
     setFile(null);
     setFileName("");
     setAnalysis(null);

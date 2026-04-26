@@ -26,11 +26,13 @@ app = FastAPI()
 
 @app.on_event("startup")
 def startup_event():
+    # Try MongoDB connect on startup.
     connect_to_mongo(raise_on_error=False)
 
 
 @app.on_event("shutdown")
 def shutdown_event():
+    # Close MongoDB when app stops.
     close_mongo_connection()
 
 app.add_middleware(
@@ -58,6 +60,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 
 def get_current_username(token: str = Depends(oauth2_scheme)):
+    # Read username from token.
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
@@ -86,8 +89,10 @@ def get_data():
 
 @app.post("/chat")
 async def chat(request: Request):
+    # Get user message.
     data = await request.json()
     userMessage = data.get("message", "")
+    # Send message to AI.
     response = client.chat.completions.create(
     extra_body={"skip_special_tokens": True},
     model= ai_model,
@@ -102,6 +107,7 @@ async def chat(request: Request):
 
 
 def get_db():
+    # Open DB session for request.
     db = SessionLocal()
     try:
         yield db
@@ -110,6 +116,7 @@ def get_db():
 
 @app.post("/signup")
 def signup(user: UserCreate, db: Session = Depends(get_db)):
+    # Check for existing user.
     existing_user = db.query(models.User).filter(
         (models.User.username == user.username) |
         (models.User.email == user.email)
@@ -120,6 +127,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 
     hashed = hash_password(user.password)
 
+    # Save new user with hashed password.
     new_user = models.User(
         username=user.username,
         email=user.email,
@@ -134,6 +142,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 
 @app.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
+    # Find user by username.
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
 
     if not db_user:
@@ -142,6 +151,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     if not verify_password(user.password, db_user.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect password")
 
+    # Create login token.
     token = create_access_token({"sub": db_user.username})
 
     return {"access_token": token, "token_type": "bearer"}
@@ -153,9 +163,11 @@ def me(username: str = Depends(get_current_username)):
 
 @app.post("/forgot-password/request")
 def request_password_reset(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    # Use same reply for any email.
     user = db.query(models.User).filter(models.User.email == payload.email).first()
 
     if user:
+        # Create and save 6-digit code.
         code = f"{random.randint(0, 999999):06d}"
         user.reset_code = code
         user.reset_code_expires = datetime.utcnow() + timedelta(minutes=10)
@@ -171,6 +183,7 @@ def request_password_reset(payload: ForgotPasswordRequest, db: Session = Depends
 
 @app.post("/forgot-password/reset")
 def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    # Check reset code and expiry.
     user = db.query(models.User).filter(models.User.email == payload.email).first()
 
     if not user or not user.reset_code or not user.reset_code_expires:
@@ -182,6 +195,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     if user.reset_code_expires < datetime.utcnow():
         raise HTTPException(status_code=400, detail="Code has expired")
 
+    # Save new password and clear reset code.
     user.password_hash = hash_password(payload.new_password)
     user.reset_code = None
     user.reset_code_expires = None
@@ -235,6 +249,7 @@ Do not include explanations or extra text.
 
     quiz_text = response.output_text
 
+    # Remove markdown before JSON parse.
     cleaned = quiz_text.strip()
     if cleaned.startswith("```"):
         cleaned = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", cleaned)
@@ -266,24 +281,17 @@ async def extract_text_from_image(file: UploadFile = File(...)):
         extracted_text = ""
         
         try:
+            # Read file as PDF.
             pdf_document = fitz.open(stream=file_stream, filetype="pdf")
             for page_num in range(len(pdf_document)):
                 page = pdf_document[page_num]
                 extracted_text += page.get_text()
             pdf_document.close()
-        except Exception:
-            file_stream.seek(0)
-            try:
-                pdf_document = fitz.open(stream=file_stream, filetype="image")
-                for page_num in range(len(pdf_document)):
-                    page = pdf_document[page_num]
-                    extracted_text += page.get_text()
-                pdf_document.close()
-            except Exception as img_error:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Could not process file: {str(img_error)}"
-                )
+        except Exception as pdf_error:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Could not process file as PDF: {str(pdf_error)}"
+            )
         
         if not extracted_text.strip():
             raise HTTPException(
@@ -292,14 +300,14 @@ async def extract_text_from_image(file: UploadFile = File(...)):
             )
         
         prompt = f"""Please analyze the following text and provide:
-1. A concise summary (3-5 sentences)
-2. Key points (as a bullet list, max 6 points)
+                     1. A concise summary (3-5 sentences)
+                     2. Key points (as a bullet list, max 6 points)
 
-Text:
-{extracted_text}
+                     Text:
+                     {extracted_text}
 
-Format your response as JSON with keys "summary" and "key_points" (array).
-"""
+                     Format your response as JSON with keys "summary" and "key_points" (array).
+                 """
         
         response = client.chat.completions.create(
             extra_body={"skip_special_tokens": True},
@@ -344,6 +352,7 @@ async def save_text_to_profile(data: SaveTextRequest, username: str = Depends(ge
     Save AI-generated text to user's profile in MongoDB
     """
     try:
+        # Save text in MongoDB.
         db = get_mongo_db()
         
         # Get or create user's saved texts collection
@@ -376,11 +385,13 @@ async def get_saved_texts(username: str = Depends(get_current_username)):
     Retrieve all saved texts for the current user from MongoDB
     """
     try:
+        # Get this user's saved texts.
         db = get_mongo_db()
         users_collection = db["users"]
         
         saved_texts = list(users_collection.find({"username": username}))
         
+        # Convert ids and dates to strings.
         for text in saved_texts:
             text["_id"] = str(text["_id"])
             text["created_at"] = text["created_at"].isoformat()
@@ -403,6 +414,7 @@ async def delete_saved_text(text_id: str, username: str = Depends(get_current_us
     """
     try:
         from bson import ObjectId
+        # Delete only if user owns it.
         db = get_mongo_db()
         users_collection = db["users"]
         
@@ -431,6 +443,7 @@ async def delete_saved_text(text_id: str, username: str = Depends(get_current_us
 
 @app.post("/friends/request")
 def send_friend_request(payload: FriendRequestCreate, username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    # Get current user and target user.
     from_user = db.query(models.User).filter(models.User.username == username).first()
     target_user = db.query(models.User).filter(models.User.username == payload.username).first()
 
@@ -472,6 +485,7 @@ def send_friend_request(payload: FriendRequestCreate, username: str = Depends(ge
     if reverse_pending_request:
         raise HTTPException(status_code=400, detail="This user has already sent you a friend request")
 
+    # Create pending request.
     request = models.FriendRequest(
         from_user_id=from_user.id,
         to_user_id=target_user.id,
@@ -485,6 +499,7 @@ def send_friend_request(payload: FriendRequestCreate, username: str = Depends(ge
 
 @app.get("/friends/requests")
 def get_incoming_friend_requests(username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    # Get pending requests for user.
     current_user = db.query(models.User).filter(models.User.username == username).first()
     if not current_user:
         raise HTTPException(status_code=401, detail="Invalid user")
@@ -494,6 +509,7 @@ def get_incoming_friend_requests(username: str = Depends(get_current_username), 
         models.FriendRequest.status == "pending",
     ).all()
 
+    # Add sender names.
     results = []
     for request in requests:
         sender = db.query(models.User).filter(models.User.id == request.from_user_id).first()
@@ -509,6 +525,7 @@ def get_incoming_friend_requests(username: str = Depends(get_current_username), 
 
 @app.post("/friends/requests/{request_id}/accept")
 def accept_friend_request(request_id: int, username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    # Check request belongs to user.
     current_user = db.query(models.User).filter(models.User.username == username).first()
     if not current_user:
         raise HTTPException(status_code=401, detail="Invalid user")
@@ -530,6 +547,7 @@ def accept_friend_request(request_id: int, username: str = Depends(get_current_u
         models.Friendship.user_two_id == user_two_id,
     ).first()
 
+    # Create friendship on accept.
     if not existing_friendship:
         friendship = models.Friendship(user_one_id=user_one_id, user_two_id=user_two_id)
         db.add(friendship)
@@ -542,6 +560,7 @@ def accept_friend_request(request_id: int, username: str = Depends(get_current_u
 
 @app.get("/friends/list")
 def get_friends_list(username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    # Get all friendships for user.
     current_user = db.query(models.User).filter(models.User.username == username).first()
     if not current_user:
         raise HTTPException(status_code=401, detail="Invalid user")
@@ -551,6 +570,7 @@ def get_friends_list(username: str = Depends(get_current_username), db: Session 
         (models.Friendship.user_two_id == current_user.id)
     ).all()
 
+    # Convert friend ids to names.
     friend_usernames = []
     for friendship in friendships:
         friend_id = friendship.user_two_id if friendship.user_one_id == current_user.id else friendship.user_one_id
@@ -563,6 +583,7 @@ def get_friends_list(username: str = Depends(get_current_username), db: Session 
 
 @app.delete("/friends/{friend_username}")
 def unfriend_user(friend_username: str, username: str = Depends(get_current_username), db: Session = Depends(get_db)):
+    # Get both users first.
     current_user = db.query(models.User).filter(models.User.username == username).first()
     friend_user = db.query(models.User).filter(models.User.username == friend_username).first()
 
@@ -583,6 +604,7 @@ def unfriend_user(friend_username: str, username: str = Depends(get_current_user
     if not friendship:
         raise HTTPException(status_code=404, detail="Friend not found")
 
+    # Delete friendship and old requests.
     db.delete(friendship)
 
     db.query(models.FriendRequest).filter(

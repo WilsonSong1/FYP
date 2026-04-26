@@ -19,16 +19,20 @@ const THEME_PREFERENCE_KEY = "themePreference";
 
 const Login: React.FC = () => {
   const ionRouter = useIonRouter();
+  // Form input values.
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  // Error text to show on login fail.
   const [error, setError] = useState("");
 
   const loginUser = async () => {
 
+    // Clear old login data before new attempt.
     localStorage.removeItem("token");
     localStorage.removeItem("username");
     setError("");
 
+    // Send username and password to backend.
     const response = await fetch("http://127.0.0.1:8000/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -46,11 +50,13 @@ const Login: React.FC = () => {
     localStorage.setItem("token", data.access_token);
     localStorage.setItem("username", username);
 
+    // Re-apply saved theme after login.
     const savedThemePreference = localStorage.getItem(THEME_PREFERENCE_KEY);
     const isDarkMode = savedThemePreference === "dark";
     localStorage.setItem("darkMode", String(isDarkMode));
     document.body.classList.toggle("dark-mode", isDarkMode);
 
+    // Go to home after successful login.
     ionRouter.push("/home");
     window.location.reload();
   };

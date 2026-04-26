@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueCons
 from database import Base
 from datetime import datetime
 
+# User account data.
 class User(Base):
     __tablename__ = "users"
 
@@ -14,6 +15,7 @@ class User(Base):
     reset_code_expires = Column(DateTime, nullable=True)
 
 
+# Friend request data.
 class FriendRequest(Base):
     __tablename__ = "friend_requests"
 
@@ -23,11 +25,13 @@ class FriendRequest(Base):
     status = Column(String, nullable=False, default="pending")
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
+    # Do not allow duplicate same-direction requests.
     __table_args__ = (
         UniqueConstraint("from_user_id", "to_user_id", name="uq_friend_request_direction"),
     )
 
 
+# Accepted friendship data.
 class Friendship(Base):
     __tablename__ = "friendships"
 
@@ -36,6 +40,7 @@ class Friendship(Base):
     user_two_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
+    # Do not allow duplicate friend pairs.
     __table_args__ = (
         UniqueConstraint("user_one_id", "user_two_id", name="uq_friend_pair"),
     )
