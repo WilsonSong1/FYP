@@ -269,6 +269,102 @@ Do not include explanations or extra text.
 
     return {"questions": questions}
 
+@app.post("/generate-quiz-from-pdf", response_model=QuizResponse)
+async def generate_quiz_from_pdf(file: UploadFile = File(...)):
+    """
+    Extract text from a PDF file and generate quiz questions from the extracted content.
+    """
+    try:
+        contents = await file.read()
+        file_stream = io.BytesIO(contents)
+
+        try:
+            pdf_document = fitz.open(stream=file_stream, filetype="pdf")
+            extracted_text = ""
+            for page_num in range(len(pdf_document)):
+                extracted_text += pdf_document[page_num].get_text()
+            pdf_document.close()
+        except Exception as pdf_error:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Could not process file as PDF: {str(pdf_error)}",
+            )
+
+        if not extracted_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="No text could be extracted from the PDF",
+            )
+
+        prompt = f"""
+You are an education quiz generator.
+Generate 10 multiple choice questions based only on the following PDF content.
+    Ignore titles, chapter headings, table of contents, page numbers, captions, footers, headers, repeated boilerplate, and any other non-essential text that should not be tested.
+    Focus only on the meaningful educational content that a student should actually be questioned on.
+
+Rules:
+- Each question must have exactly 4 answer options
+- Only ONE answer is correct
+- Return JSON ONLY in this exact example format:
+[ 
+  {{
+    "question": "...",
+    "options": {{
+      "A": "...",
+      "B": "...",
+      "C": "...",
+      "D": "..."
+    }},
+    "correct_answer": "A"
+  }}
+]
+Do not include explanations or extra text.
+
+PDF Content:
+{extracted_text}
+"""
+
+        response = client.responses.create(
+            model=ai_model,
+            input=[
+                {
+                    "role": "system",
+                    "content": "You are an educational quiz generator.",
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+        )
+
+        quiz_text = response.output_text
+
+        cleaned = quiz_text.strip()
+        if cleaned.startswith("```"):
+            cleaned = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", cleaned)
+            cleaned = re.sub(r"\s*```$", "", cleaned).strip()
+
+        match = re.search(r"\[[\s\S]*\]", cleaned)
+        if match:
+            cleaned = match.group(0).strip()
+
+        try:
+            questions = json.loads(cleaned)
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=502,
+                detail="Quiz generator returned invalid JSON. Try again.",
+            )
+
+        return {"questions": questions}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating quiz from PDF: {str(e)}",
+        )
 
 @app.post("/extract-text-from-image")
 async def extract_text_from_image(file: UploadFile = File(...)):

@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   IonPage,
   IonHeader,
@@ -7,75 +6,200 @@ import {
   IonTitle,
   IonContent,
   IonButton,
+  IonList,
+  IonItem,
+  IonRadioGroup,
+  IonRadio,
+  IonLabel,
   IonSpinner,
   IonText,
+  useIonRouter,
 } from "@ionic/react";
 import "./PageTheme.css";
 
-interface AnalysisResult {
-  filename: string;
-  summary: string;
-  key_points: string[];
+interface Question {
+  question: string;
+  options: { [key: string]: string };
+  correct_answer: string;
+}
+
+interface QuizResultItem {
+  question: string;
+  selectedAnswerKey: string;
+  selectedAnswerText: string;
+  correctAnswerKey: string;
+  correctAnswerText: string;
+  isCorrect: boolean;
+  wrongAnswer?: string;
 }
 
 const QuizFromImage: React.FC = () => {
-  // File selected by the user.
+  const ionRouter = useIonRouter();
+  // PDF file selected by the user.
   const [file, setFile] = useState<File | null>(null);
-  // Result returned from backend.
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
-  // Loading state while request runs.
-  const [loading, setLoading] = useState(false);
   // File name shown in the UI.
-  const [fileName, setFileName] = useState<string>("");
+  const [fileName, setFileName] = useState("");
+  // Quiz questions returned by backend.
+  const [questions, setQuestions] = useState<Question[]>([]);
+  // User answers keyed by question index.
+  const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+  // True after quiz is submitted.
+  const [submitted, setSubmitted] = useState(false);
+  // Score and per-question results.
+  const [score, setScore] = useState(0);
+  const [results, setResults] = useState<QuizResultItem[]>([]);
+  // Loading and saving states.
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [hasSavedResult, setHasSavedResult] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // Save selected file and clear old result.
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       setFileName(selectedFile.name);
-      setAnalysis(null);
+      setQuestions([]);
+      setAnswers({});
+      setSubmitted(false);
+      setScore(0);
+      setResults([]);
+      setSaveMessage("");
+      setHasSavedResult(false);
     }
   };
 
-  const handleExtractAndAnalyze = async () => {
-    // Stop if no file is selected.
+  const generateQuiz = async () => {
     if (!file) {
-      alert("Please select an image file first");
+      alert("Please select a PDF file first");
       return;
     }
 
-    // Send file to backend for analysis.
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("http://127.0.0.1:8000/extract-text-from-image", {
+      const response = await fetch("http://127.0.0.1:8000/generate-quiz-from-pdf", {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to generate quiz from PDF");
       }
 
-      const data = await res.json();
-      setAnalysis(data);
+      const data = await response.json();
+      setQuestions(data.questions);
+      setAnswers({});
+      setSubmitted(false);
+      setScore(0);
+      setResults([]);
+      setSaveMessage("");
+      setHasSavedResult(false);
     } catch (error) {
-      // Show simple error message on failure.
-      console.error("Error processing image:", error);
-      alert("Failed to process image");
+      console.error("Error generating quiz from PDF:", error);
+      alert(error instanceof Error ? error.message : "Failed to generate quiz");
     } finally {
       setLoading(false);
     }
   };
 
-  const resetForm = () => {
-    // Reset page to initial state.
+  const submitQuiz = () => {
+    if (questions.length === 0) {
+      return;
+    }
+
+    if (Object.keys(answers).length !== questions.length) {
+      alert("Please answer all questions before submitting!");
+      return;
+    }
+
+    let correctCount = 0;
+    const quizResults = questions.map((q, i) => {
+      const userAnswer = answers[i];
+      const isCorrect = userAnswer === q.correct_answer;
+      if (isCorrect) correctCount++;
+
+      return {
+        question: q.question,
+        selectedAnswerKey: userAnswer,
+        selectedAnswerText: q.options[userAnswer] || "Not answered",
+        correctAnswerKey: q.correct_answer,
+        correctAnswerText: q.options[q.correct_answer],
+        isCorrect,
+        wrongAnswer: isCorrect ? undefined : q.options[userAnswer] || "Not answered",
+      };
+    });
+
+    setScore(correctCount);
+    setResults(quizResults);
+    setSubmitted(true);
+    setSaveMessage("");
+    setHasSavedResult(false);
+  };
+
+  const saveResultToProfile = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please log in to save quiz results.");
+      ionRouter.push("/login");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const quizResultPayload = {
+        topic: fileName || "PDF Quiz",
+        level: "PDF",
+        score,
+        total_questions: questions.length,
+        questions: results.map((result) => ({
+          question: result.question,
+          selected_answer_key: result.selectedAnswerKey,
+          selected_answer_text: result.selectedAnswerText,
+          correct_answer_key: result.correctAnswerKey,
+          correct_answer_text: result.correctAnswerText,
+          is_correct: result.isCorrect,
+          wrong_answer: result.wrongAnswer ?? null,
+        })),
+      };
+
+      const response = await fetch("http://127.0.0.1:8000/save-quiz-result-to-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(quizResultPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save quiz result");
+      }
+
+      setHasSavedResult(true);
+      setSaveMessage("Quiz result saved to your profile.");
+    } catch (error) {
+      console.error("Error saving quiz result:", error);
+      setSaveMessage("Could not save quiz result. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetQuiz = () => {
     setFile(null);
     setFileName("");
-    setAnalysis(null);
+    setQuestions([]);
+    setAnswers({});
+    setSubmitted(false);
+    setScore(0);
+    setResults([]);
+    setSaveMessage("");
+    setHasSavedResult(false);
   };
 
   return (
@@ -92,20 +216,20 @@ const QuizFromImage: React.FC = () => {
           >
             Back
           </IonButton>
-          <IonTitle className="ion-text-center">Generate Quiz From Image</IonTitle>
+          <IonTitle className="ion-text-center">Generate Quiz From PDF</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent className="ion-padding light-content">
-        {!analysis && (
+        {!submitted && (
           <>
             <div style={{ marginBottom: "20px" }}>
               <label
-                htmlFor="image-input"
+                htmlFor="pdf-input"
                 style={{
                   display: "block",
                   padding: "15px",
-                  backgroundColor: "rgba(255, 255, 255, 0.92)",
+                  backgroundColor: "rgba(41, 187, 245, 0.92)",
                   border: "2px dashed #d8e8f8",
                   borderRadius: "10px",
                   textAlign: "center",
@@ -116,25 +240,27 @@ const QuizFromImage: React.FC = () => {
                   e.currentTarget.style.backgroundColor = "rgba(240, 248, 255, 1)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.92)";
+                  e.currentTarget.style.backgroundColor = "rgba(41, 187, 245, 0.92)";
                 }}
               >
                 {fileName ? (
                   <IonText>
-                    <p><strong>Selected:</strong> {fileName}</p>
+                    <p>
+                      <strong>Selected:</strong> {fileName}
+                    </p>
                   </IonText>
                 ) : (
                   <IonText>
-                    <p style={{ color: "#6f9fcc", fontWeight: "500" }}>
-                      Click to select an image file
+                    <p style={{ color: "#000000", fontWeight: "500" }}>
+                      Click to select a PDF file
                     </p>
                   </IonText>
                 )}
               </label>
               <input
-                id="image-input"
+                id="pdf-input"
                 type="file"
-                accept="image/*,.pdf"
+                accept="application/pdf,.pdf"
                 onChange={handleFileSelect}
                 style={{ display: "none" }}
               />
@@ -143,10 +269,10 @@ const QuizFromImage: React.FC = () => {
             <IonButton
               className="light-primary-button"
               expand="block"
-              onClick={handleExtractAndAnalyze}
+              onClick={generateQuiz}
               disabled={loading || !file}
             >
-              {loading ? "Analyzing..." : "Analyze Image"}
+              {loading ? "Generating..." : "Generate Quiz"}
             </IonButton>
 
             {loading && (
@@ -162,54 +288,106 @@ const QuizFromImage: React.FC = () => {
               >
                 <IonSpinner name="circles" color="primary" />
                 <p style={{ fontSize: "16px", fontWeight: "500" }}>
-                  Analyzing image...
+                  Generating your quiz...
                 </p>
               </div>
+            )}
+
+            {questions.length > 0 && !loading && (
+              <>
+                <IonList>
+                  {questions.map((q, i) => (
+                    <IonItem key={i}>
+                      <IonLabel>
+                        <h2>
+                          {i + 1}. {q.question}
+                        </h2>
+                        <IonRadioGroup
+                          value={answers[i]}
+                          onIonChange={(e) => setAnswers({ ...answers, [i]: e.detail.value })}
+                        >
+                          {Object.entries(q.options).map(([key, opt]) => (
+                            <IonItem key={key}>
+                              <IonRadio value={key} />
+                              <IonLabel>{opt}</IonLabel>
+                            </IonItem>
+                          ))}
+                        </IonRadioGroup>
+                      </IonLabel>
+                    </IonItem>
+                  ))}
+                </IonList>
+                <IonButton className="light-primary-button" expand="block" onClick={submitQuiz}>
+                  Submit Quiz
+                </IonButton>
+              </>
             )}
           </>
         )}
 
-        {analysis && (
+        {submitted && (
           <>
-            <div
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.92)",
-                padding: "15px",
-                borderRadius: "10px",
-                marginBottom: "20px",
-                borderLeft: "5px solid #6f9fcc",
-              }}
-            >
-              <IonText>
-                <h3>Summary</h3>
-                <p>{analysis.summary}</p>
-              </IonText>
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <h1>Quiz Results</h1>
+              <h2 style={{ color: score / questions.length >= 0.7 ? "green" : "red" }}>
+                Score: {score} / {questions.length}
+              </h2>
+              <p>{((score / questions.length) * 100).toFixed(1)}%</p>
             </div>
 
-            {analysis.key_points && analysis.key_points.length > 0 && (
-              <div
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.92)",
-                  padding: "15px",
-                  borderRadius: "10px",
-                  marginBottom: "20px",
-                  borderLeft: "5px solid #6f9fcc",
-                }}
-              >
-                <IonText>
-                  <h3>Key Points</h3>
-                  <ul>
-                    {analysis.key_points.map((point, index) => (
-                      <li key={index}>{point}</li>
-                    ))}
-                  </ul>
-                </IonText>
-              </div>
-            )}
+            <IonList>
+              {questions.map((q, i) => (
+                <IonItem
+                  key={i}
+                  style={{
+                    borderLeft: `5px solid ${results[i].isCorrect ? "green" : "red"}`,
+                    paddingLeft: "10px",
+                  }}
+                >
+                  <IonLabel>
+                    <h2>
+                      {i + 1}. {q.question}
+                    </h2>
+                    <p>
+                      <strong>Your answer:</strong> {results[i].selectedAnswerText}
+                    </p>
+                    {!results[i].isCorrect && (
+                      <p style={{ color: "green" }}>
+                        <strong>Correct answer:</strong> {results[i].correctAnswerText}
+                      </p>
+                    )}
+                    <p
+                      style={{
+                        marginTop: "10px",
+                        fontWeight: "bold",
+                        color: results[i].isCorrect ? "green" : "red",
+                      }}
+                    >
+                      {results[i].isCorrect ? "Correct" : "Incorrect"}
+                    </p>
+                  </IonLabel>
+                </IonItem>
+              ))}
+            </IonList>
 
-            <IonButton className="light-primary-button" expand="block" onClick={resetForm}>
-              Analyze Another Image
+            <IonButton className="light-primary-button" expand="block" onClick={resetQuiz}>
+              Take Another Quiz
             </IonButton>
+
+            <IonButton
+              className="light-primary-button"
+              expand="block"
+              onClick={saveResultToProfile}
+              disabled={saving || hasSavedResult}
+            >
+              {saving ? "Saving..." : hasSavedResult ? "Saved to Profile" : "Save Result to Profile"}
+            </IonButton>
+
+            {saveMessage && (
+              <p style={{ textAlign: "center", marginTop: "12px", fontWeight: 500 }}>
+                {saveMessage}
+              </p>
+            )}
           </>
         )}
       </IonContent>
