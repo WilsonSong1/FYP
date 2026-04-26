@@ -137,7 +137,6 @@ const Home: React.FC = () => {
               {!isLoggedIn && (
                 <IonButton
                   className="home-button"
-                  color="secondary"
                   onClick={() => ionRouter.push("/signup")}
                 >
                   Sign Up
