@@ -870,3 +870,79 @@ def unfriend_user(friend_username: str, username: str = Depends(get_current_user
     db.commit()
 
     return {"message": "Successfully unfriended"}
+
+@app.post("/summarise-pdf")
+async def summarise_pdf(file: UploadFile = File(...)):
+    """
+    Extract text from a PDF file and summarise it with key bullet points.
+    """
+    try:
+        contents = await file.read()
+        file_stream = io.BytesIO(contents)
+        extracted_text = ""
+        
+        try:
+            # Read file as PDF.
+            pdf_document = fitz.open(stream=file_stream, filetype="pdf")
+            for page_num in range(len(pdf_document)):
+                page = pdf_document[page_num]
+                extracted_text += page.get_text()
+            pdf_document.close()
+        except Exception as pdf_error:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Could not process file as PDF: {str(pdf_error)}"
+            )
+        
+        if not extracted_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="No text could be extracted from the PDF"
+            )
+        
+        prompt = f"""Please analyze the following text and provide:
+                     1. A concise summary (3-5 sentences, direct and to the point)
+                     2. Key points (as a bullet list, max 8 points)
+
+                     Text:
+                     {extracted_text}
+
+                     Format your response as JSON with keys "summary" and "key_points" (array).
+                 """
+        
+        response = client.chat.completions.create(
+            extra_body={"skip_special_tokens": True},
+            model=ai_model,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that summarises text and extracts key points. Always respond with valid JSON."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        ai_response = response.choices[0].message.content
+        
+        try:
+            json_match = re.search(r'\{[\s\S]*\}', ai_response)
+            if json_match:
+                result = json.loads(json_match.group(0))
+            else:
+                result = json.loads(ai_response)
+        except json.JSONDecodeError:
+            result = {
+                "summary": ai_response,
+                "key_points": []
+            }
+        
+        return {
+            "filename": file.filename,
+            "summary": result.get("summary", ""),
+            "key_points": result.get("key_points", [])
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing PDF: {str(e)}"
+        )

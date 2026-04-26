@@ -29,6 +29,9 @@ const Home: React.FC = () => {
   const [copyToastOpen, setCopyToastOpen] = useState(false);
   const [saveToastOpen, setSaveToastOpen] = useState(false);
   const [saveToastMessage, setSaveToastMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 
   const openMessageMenu = (index: number, aiMessage: string) => {
@@ -81,6 +84,73 @@ const Home: React.FC = () => {
       setSaveToastOpen(true);
     } finally {
       setActiveMenuIndex(null);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const uploadPDF = async () => {
+    if (!selectedFile) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      // Add file name to chat
+      setChat((prev) => [...prev, { user: `Uploaded: ${selectedFile.name}`, ai: "..." }]);
+
+      const response = await fetch("http://127.0.0.1:8000/summarise-pdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Format the AI response with summary and key points
+        const summaryText = `Summary:\n${data.summary}\n\nKey Points:\n${
+          Array.isArray(data.key_points)
+            ? data.key_points.map((point: string) => `• ${point}`).join("\n")
+            : "No key points available"
+        }`;
+
+        setChat((prev) =>
+          prev.map((entry, idx) =>
+            idx === prev.length - 1
+              ? { ...entry, ai: summaryText }
+              : entry
+          )
+        );
+      } else {
+        setChat((prev) =>
+          prev.map((entry, idx) =>
+            idx === prev.length - 1
+              ? { ...entry, ai: `Error: ${data.detail || "Could not process PDF"}` }
+              : entry
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      setChat((prev) =>
+        prev.map((entry, idx) =>
+          idx === prev.length - 1
+            ? { ...entry, ai: "Could not reach server." }
+            : entry
+        )
+      );
+    } finally {
+      setUploading(false);
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -236,6 +306,37 @@ const Home: React.FC = () => {
       />
 
       <IonFooter>
+        <div style={{ padding: "10px" }}>
+          {selectedFile && (
+            <div style={{ marginBottom: "10px", padding: "10px", borderRadius: "4px" }}>
+              <div style={{ fontSize: "14px", marginBottom: "5px" }}>
+                {selectedFile.name}
+              </div>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <IonButton
+                  size="small"
+                  color="primary"
+                  onClick={uploadPDF}
+                  disabled={uploading}
+                >
+                  {uploading ? "Uploading..." : "Summarise PDF"}
+                </IonButton>
+                <IonButton
+                  size="small"
+                  color="danger"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                    }
+                  }}
+                >
+                  Cancel
+                </IonButton>
+              </div>
+            </div>
+          )}
+        </div>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -254,6 +355,24 @@ const Home: React.FC = () => {
                 }
               }}
             />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              onChange={handleFileSelect}
+              style={{ display: "none" }}
+            />
+            <IonButton
+              className="light-primary-button"
+              onClick={(e) => {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }}
+              fill="clear"
+              size="large"
+            >
+              📎
+            </IonButton>
             <IonButton className="light-primary-button" type="submit">Send</IonButton>
           </IonItem>
         </form>
