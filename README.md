@@ -50,6 +50,7 @@ Backend services are implemented with FastAPI and SQLAlchemy, while the frontend
 FYP/
 ├── backend/
 │   ├── main.py
+│   ├── requirements.txt
 │   ├── database.py
 │   ├── mongodb.py
 │   ├── models.py
@@ -102,7 +103,7 @@ From the project root:
 cd backend
 python -m venv .venv
 .\.venv\Scripts\activate
-pip install fastapi "uvicorn[standard]" sqlalchemy psycopg2-binary pymongo python-dotenv passlib bcrypt python-jose openai pymupdf pytest
+pip install -r requirements.txt
 ```
 
 Create or update `backend/.env` with your values:
