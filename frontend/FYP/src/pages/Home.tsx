@@ -109,14 +109,6 @@ const Home: React.FC = () => {
 
       <IonContent className="ion-padding home-content">
         <IonGrid className="home-grid">
-          <IonRow className="ion-text-center">
-            <IonCol size="12">
-              <IonText>
-                <h2>Welcome to the App!</h2>
-              </IonText>
-            </IonCol>
-          </IonRow>
-
           <IonRow className="home-buttons-row ion-justify-content-center">
             <IonCol size="12" sizeMd="6" className="home-buttons-col">
               {!isLoggedIn && (
