@@ -46,7 +46,7 @@ app.add_middleware(
 )
 
 apiKey = os.getenv("AIKEY")
-ai_model = "deepseek/deepseek-v4-pro"
+ai_model = "deepseek/deepseek-v4-flash"
 print("Loaded API KEY:" , bool(apiKey))
 
 models.Base.metadata.create_all(bind=engine)
@@ -636,36 +636,54 @@ async def delete_quiz_result(quiz_result_id: str, username: str = Depends(get_cu
 
 
 @app.get("/quiz-leaderboard")
-def get_quiz_leaderboard(db: Session = Depends(get_db)):
+def get_quiz_leaderboard(username: str = Depends(get_current_username), db: Session = Depends(get_db)):
     """
-    Return all users ranked by average quiz result percentage.
+    Return the current user and their friends ranked by average quiz result percentage.
     Users with no quiz results are included with an average of 0.
     """
     try:
+        current_user = db.query(models.User).filter(models.User.username == username).first()
+        if not current_user:
+            raise HTTPException(status_code=401, detail="Invalid user")
+
+        friendships = db.query(models.Friendship).filter(
+            (models.Friendship.user_one_id == current_user.id) |
+            (models.Friendship.user_two_id == current_user.id)
+        ).all()
+
+        friend_ids = set()
+        for friendship in friendships:
+            friend_id = friendship.user_two_id if friendship.user_one_id == current_user.id else friendship.user_one_id
+            friend_ids.add(friend_id)
+
+        visible_user_ids = set(friend_ids)
+        visible_user_ids.add(current_user.id)
+
+        visible_users = db.query(models.User).filter(models.User.id.in_(list(visible_user_ids))).all()
+        visible_usernames = [user.username for user in visible_users]
+
         db_mongo = get_mongo_db()
         quiz_results_collection = db_mongo["quiz_results"]
-
-        quiz_results = list(quiz_results_collection.find({}))
-        users = db.query(models.User).all()
+        quiz_results = list(quiz_results_collection.find({"username": {"$in": visible_usernames}}))
 
         aggregates = {}
         for result in quiz_results:
-            username = result.get("username")
-            if not username:
+            result_username = result.get("username")
+            if not result_username:
                 continue
 
             score = result.get("score", 0) or 0
             total_questions = result.get("total_questions", 0) or 0
 
-            if username not in aggregates:
-                aggregates[username] = {"score_sum": 0, "question_sum": 0, "quiz_count": 0}
+            if result_username not in aggregates:
+                aggregates[result_username] = {"score_sum": 0, "question_sum": 0, "quiz_count": 0}
 
-            aggregates[username]["score_sum"] += score
-            aggregates[username]["question_sum"] += total_questions
-            aggregates[username]["quiz_count"] += 1
+            aggregates[result_username]["score_sum"] += score
+            aggregates[result_username]["question_sum"] += total_questions
+            aggregates[result_username]["quiz_count"] += 1
 
         leaderboard = []
-        for user in users:
+        for user in visible_users:
             user_aggregate = aggregates.get(user.username, {"score_sum": 0, "question_sum": 0, "quiz_count": 0})
             average_score = 0
             if user_aggregate["question_sum"] > 0:
@@ -683,6 +701,8 @@ def get_quiz_leaderboard(db: Session = Depends(get_db)):
             "leaderboard": leaderboard,
             "count": len(leaderboard),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
